@@ -1,5 +1,7 @@
 export type EstadoVisita =
     | 'pendiente'
+    | 'en_camino'
+    | 'en_sitio'
     | 'en_proceso'
     | 'obs_guardadas'
     | 'completo';
@@ -14,10 +16,10 @@ export interface Visita {
     tecnicoId: string;
     tecnicoNombre: string;
     estado: EstadoVisita;
-    fechaRealizado?: Date;
-    fechaObsGuardadas?: Date;
-    fechaDocGuardada?: Date;
-    fechaCompleto?: Date;
-    creadoEn?: Date;
-    actualizadoEn?: Date;
+
+    horaSalida?: any;
+    horaLlegada?: any;
+    horaTermino?: any;
+    creadaEn?: any;
+    actualizadaEn?: any;
 }
