@@ -24,7 +24,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="feat"><span class="feat-ico">📸</span>Evidencia fotográfica</div>
           <div class="feat"><span class="feat-ico">📄</span>Generación de reportes</div>
         </div>
-        <div class="cliente">Grupo Pecuario San Antonio S.A. de C.V.</div>
+        <div class="cliente">© RAGUI – Sistemas ESCOM</div>
       </div>
 
       <div class="login-right" style="--login-bg: url('/assets/login-bg.jpg')">
@@ -64,7 +64,7 @@ import { AuthService } from '../../core/services/auth.service';
                 <button type="button"
                         class="pwd-toggle"
                         (click)="mostrarPwd = !mostrarPwd">
-                  {{ mostrarPwd ? '🙈' : '👁' }}
+                  {{ mostrarPwd ? '👁️‍🗨️' : '👁' }}
                 </button>
               </div>
             </div>
@@ -81,7 +81,7 @@ import { AuthService } from '../../core/services/auth.service';
             </button>
           </form>
         </div>
-        <p class="login-footer">Sistemas ESCOM · {{ anio }}</p>
+        <p class="login-footer">© RAGUI – Sistemas ESCOM · {{ anio }}</p>
       </div>
 
     </div>
