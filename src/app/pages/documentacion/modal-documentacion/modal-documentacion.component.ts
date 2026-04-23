@@ -9,12 +9,10 @@ import { ObservacionesService } from '../../../core/services/observaciones.servi
 import { StorageService } from '../../../core/services/storage.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { VisitasService } from '../../../core/services/visitas.service';
+import { DialogService } from '../../../core/services/dialog.service';
+import { DialogComponent } from '../../../shared/components/dialog/dialog.component';
 import {
-  Documentacion,
-  ItemChecklist,
-  SeccionDoc,
-  FotoItem,
-  TipoFoto
+  Documentacion, ItemChecklist, SeccionDoc, FotoItem, TipoFoto
 } from '../../../core/models/documentacion.model';
 import { Observacion } from '../../../core/models/observacion.model';
 import { Visita } from '../../../core/models/visita.model';
@@ -22,7 +20,7 @@ import { Visita } from '../../../core/models/visita.model';
 @Component({
   selector: 'app-modal-documentacion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DialogComponent],
   template: `
     <div class="modal-backdrop" (click)="onBackdrop($event)">
       <div class="modal-box modal-doc-box" (click)="$event.stopPropagation()">
@@ -42,23 +40,19 @@ import { Visita } from '../../../core/models/visita.model';
             </div>
           } @else if (doc()) {
 
-            <!-- Banners -->
             @if (bloqueado && !esAdmin) {
               <div class="banner banner-lock mb-3">
                 <span>🔒</span>
                 Documentación finalizada — solo lectura.
-                No se puede modificar nada.
               </div>
             }
             @if (bloqueado && esAdmin) {
               <div class="banner banner-lock mb-3">
-                <span>🔒</span>
-                Documentación finalizada — solo lectura.
+                <span>🔒</span> Documentación finalizada — solo lectura.
               </div>
               <div class="banner banner-warn mb-3">
                 <span>⚠</span>
-                Si reabres la documentación, tendrán que
-                volver a llenarla desde cero.
+                Si reabres, tendrán que volver a llenarla desde cero.
               </div>
             }
             @if (!bloqueado) {
@@ -69,14 +63,12 @@ import { Visita } from '../../../core/models/visita.model';
               </div>
             }
 
-            <!-- Contenido con overlay -->
             <div class="contenido-doc">
 
               @if (bloqueado) {
                 <div class="bloqueo-overlay"></div>
               }
 
-              <!-- Info -->
               <div class="section-label">Información</div>
               <div class="form-row" style="margin-bottom:16px">
                 <div class="form-group">
@@ -92,7 +84,6 @@ import { Visita } from '../../../core/models/visita.model';
                 </div>
               </div>
 
-              <!-- Secciones -->
               @for (sec of secciones; track sec.id) {
                 <div class="card mb-3">
                   <div class="card-header"
@@ -125,15 +116,14 @@ import { Visita } from '../../../core/models/visita.model';
                           </div>
 
                           <div class="foto-block">
-                            <div class="foto-slots"
-                                 [class.masked]="item.sinFotos">
+                            <div class="foto-slots" [class.masked]="item.sinFotos">
 
                               @if (item.esLimpieza) {
                                 <div class="foto-slot">
                                   <span class="slot-lbl">Antes</span>
                                   <div class="slot-box"
                                        [class.tiene-foto]="getFoto(item,'antes')">
-                                    @if (getFoto(item, 'antes'); as f) {
+                                    @if (getFoto(item,'antes'); as f) {
                                       <img [src]="f.url" alt="antes"
                                            (click)="$event.stopPropagation()" />
                                     } @else {
@@ -151,7 +141,7 @@ import { Visita } from '../../../core/models/visita.model';
                                   <span class="slot-lbl">Después</span>
                                   <div class="slot-box"
                                        [class.tiene-foto]="getFoto(item,'despues')">
-                                    @if (getFoto(item, 'despues'); as f) {
+                                    @if (getFoto(item,'despues'); as f) {
                                       <img [src]="f.url" alt="después"
                                            (click)="$event.stopPropagation()" />
                                     } @else {
@@ -170,7 +160,7 @@ import { Visita } from '../../../core/models/visita.model';
                                   <span class="slot-lbl">Foto</span>
                                   <div class="slot-box"
                                        [class.tiene-foto]="getFoto(item,'evidencia')">
-                                    @if (getFoto(item, 'evidencia'); as f) {
+                                    @if (getFoto(item,'evidencia'); as f) {
                                       <img [src]="f.url" alt="evidencia"
                                            (click)="$event.stopPropagation()" />
                                     } @else {
@@ -187,7 +177,6 @@ import { Visita } from '../../../core/models/visita.model';
                               }
 
                             </div>
-
                             <div class="sin-row">
                               <input type="checkbox"
                                      [id]="'sf-' + item.id"
@@ -203,11 +192,9 @@ import { Visita } from '../../../core/models/visita.model';
                       }
                     </div>
                   }
-
                 </div>
               }
 
-              <!-- Observaciones -->
               @if (observaciones().length > 0) {
                 <div class="card mb-3">
                   <div class="card-header"
@@ -224,17 +211,13 @@ import { Visita } from '../../../core/models/visita.model';
                     <div class="card-body" style="padding:8px 16px">
                       @for (obs of observaciones(); track obs.numero) {
                         <div class="check-item">
-
                           <div class="check-top" style="margin-bottom:6px">
                             <span style="font-size:12px;color:var(--gris-med);
                                          min-width:22px;flex-shrink:0">
                               {{ obs.numero }}.
                             </span>
-                            <span class="check-label">
-                              {{ obs.descripcion }}
-                            </span>
+                            <span class="check-label">{{ obs.descripcion }}</span>
                           </div>
-
                           <div class="foto-block">
                             <div class="foto-slots"
                                  [class.masked]="sinFotoObs[obs.numero]">
@@ -263,40 +246,27 @@ import { Visita } from '../../../core/models/visita.model';
                                      [checked]="sinFotoObs[obs.numero]"
                                      (change)="toggleSinFotoObs(obs.numero)"
                                      [disabled]="!puedeEditar" />
-                              <label [for]="'sfo-' + obs.numero">
-                                Sin foto
-                              </label>
+                              <label [for]="'sfo-' + obs.numero">Sin foto</label>
                             </div>
                           </div>
-
                         </div>
                       }
                     </div>
 
                     <div class="resumen-pri">
                       <span class="resumen-lbl">Prioridades:</span>
-                      <span class="chip chip-alta">
-                        {{ cntPri('alta') }} Alta
-                      </span>
-                      <span class="chip chip-media">
-                        {{ cntPri('media') }} Media
-                      </span>
-                      <span class="chip chip-baja">
-                        {{ cntPri('baja') }} Baja
-                      </span>
+                      <span class="chip chip-alta">{{ cntPri('alta') }} Alta</span>
+                      <span class="chip chip-media">{{ cntPri('media') }} Media</span>
+                      <span class="chip chip-baja">{{ cntPri('baja') }} Baja</span>
                     </div>
                   }
-
                 </div>
               }
 
             </div>
-            <!-- fin contenido-doc -->
-
           }
         </div>
 
-        <!-- Footer -->
         <div class="modal-footer">
           @if (bloqueado) {
             @if (esAdmin) {
@@ -306,20 +276,16 @@ import { Visita } from '../../../core/models/visita.model';
                 🔓 Reabrir documentación
               </button>
             }
-            <button class="btn btn-secondary"
-                    (click)="cerrar.emit()">
+            <button class="btn btn-secondary" (click)="cerrar.emit()">
               Cerrar
             </button>
           } @else {
-            <button class="btn btn-secondary"
-                    (click)="cerrar.emit()">
+            <button class="btn btn-secondary" (click)="cerrar.emit()">
               Cancelar
             </button>
             <button class="btn btn-success"
                     [disabled]="guardando() || !validarCompleto()"
-                    [title]="!validarCompleto()
-                      ? 'Completa todos los campos primero'
-                      : ''"
+                    [title]="!validarCompleto() ? 'Completa todos los campos' : ''"
                     (click)="onFinalizar()">
               @if (guardando()) { <span class="spinner"></span> }
               Finalizar documentación
@@ -329,17 +295,16 @@ import { Visita } from '../../../core/models/visita.model';
 
       </div>
     </div>
+
+    <app-dialog />
   `,
   styles: [`
     .modal-doc-box   { max-width: 720px; }
     .mb-3            { margin-bottom: 12px; }
     .contenido-doc   { position: relative; }
     .bloqueo-overlay {
-      position: absolute;
-      inset: 0;
-      z-index: 10;
-      cursor: not-allowed;
-      background: transparent;
+      position: absolute; inset: 0; z-index: 10;
+      cursor: not-allowed; background: transparent;
     }
   `],
 })
@@ -354,6 +319,7 @@ export class ModalDocumentacionComponent implements OnInit {
   private storage    = inject(StorageService);
   private auth       = inject(AuthService);
   private visitasSvc = inject(VisitasService);
+  private dialog     = inject(DialogService);
 
   doc           = signal<Documentacion | null>(null);
   cargando      = signal(true);
@@ -389,23 +355,16 @@ export class ModalDocumentacionComponent implements OnInit {
     }
 
     const d = await this.docSvc.inicializarDocumentacion(
-      this.visita.id!,
-      this.visita.tipo,
-      this.visita.tecnicoNombre,
+      this.visita.id!, this.visita.tipo, this.visita.tecnicoNombre,
     );
     this.doc.set(d);
 
-    // Cargar fotos y sinFoto de observaciones desde Firestore
     if (d && d.items) {
       for (const ob of this.observaciones()) {
         const itemObs = d.items.find(i => i.id === `obs_${ob.numero}`);
         if (itemObs) {
-          if (itemObs.fotos && itemObs.fotos.length > 0) {
-            this.fotoObs[ob.numero] = itemObs.fotos[0];
-          }
-          if (itemObs.sinFotos) {
-            this.sinFotoObs[ob.numero] = true;
-          }
+          if (itemObs.fotos?.length > 0) this.fotoObs[ob.numero] = itemObs.fotos[0];
+          if (itemObs.sinFotos) this.sinFotoObs[ob.numero] = true;
         }
       }
     }
@@ -413,7 +372,6 @@ export class ModalDocumentacionComponent implements OnInit {
     this.cargando.set(false);
   }
 
-  // ── Secciones ──────────────────────────────────────────────────────────────
   getItems(seccion: SeccionDoc): ItemChecklist[] {
     return this.doc()?.items
       .filter(i => i.seccion === seccion && !i.id.startsWith('obs_')) ?? [];
@@ -431,16 +389,11 @@ export class ModalDocumentacionComponent implements OnInit {
       : this.abiertas.add(id);
   }
 
-  // ── Fotos checklist ────────────────────────────────────────────────────────
   getFoto(item: ItemChecklist, tipo: string): FotoItem | undefined {
     return item.fotos.find(f => f.tipo === tipo);
   }
 
-  async subirFoto(
-    event: Event,
-    item: ItemChecklist,
-    tipo: string
-  ): Promise<void> {
+  async subirFoto(event: Event, item: ItemChecklist, tipo: string): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     const foto = await this.storage.subirFoto(
@@ -451,7 +404,6 @@ export class ModalDocumentacionComponent implements OnInit {
     await this.docSvc.guardarBorrador(this.visita.id!, this.doc()!);
   }
 
-  // ── Fotos observaciones ────────────────────────────────────────────────────
   async subirFotoObs(event: Event, num: number): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -459,8 +411,6 @@ export class ModalDocumentacionComponent implements OnInit {
       this.visita.id!, `obs_${num}`, 'evidencia', file
     );
     this.fotoObs[num] = foto;
-
-    // Guardar en Firestore dentro de los items del documento
     const d = this.doc();
     if (d) {
       const itemExistente = d.items.find(i => i.id === `obs_${num}`);
@@ -468,14 +418,9 @@ export class ModalDocumentacionComponent implements OnInit {
         itemExistente.fotos = [foto];
       } else {
         d.items.push({
-          id:          `obs_${num}`,
-          seccion:     'conectividad',
-          descripcion: '',
-          esLimpieza:  false,
-          aplica:      false,
-          checked:     false,
-          sinFotos:    false,
-          fotos:       [foto],
+          id: `obs_${num}`, seccion: 'conectividad', descripcion: '',
+          esLimpieza: false, aplica: false, checked: false,
+          sinFotos: false, fotos: [foto],
         });
       }
       await this.docSvc.guardarBorrador(this.visita.id!, d);
@@ -485,8 +430,6 @@ export class ModalDocumentacionComponent implements OnInit {
   async toggleSinFotoObs(num: number): Promise<void> {
     if (!this.puedeEditar) return;
     this.sinFotoObs[num] = !this.sinFotoObs[num];
-
-    // Guardar en Firestore
     const d = this.doc();
     if (d) {
       const itemExistente = d.items.find(i => i.id === `obs_${num}`);
@@ -494,21 +437,15 @@ export class ModalDocumentacionComponent implements OnInit {
         itemExistente.sinFotos = this.sinFotoObs[num];
       } else {
         d.items.push({
-          id:          `obs_${num}`,
-          seccion:     'conectividad',
-          descripcion: '',
-          esLimpieza:  false,
-          aplica:      false,
-          checked:     false,
-          sinFotos:    this.sinFotoObs[num],
-          fotos:       [],
+          id: `obs_${num}`, seccion: 'conectividad', descripcion: '',
+          esLimpieza: false, aplica: false, checked: false,
+          sinFotos: this.sinFotoObs[num], fotos: [],
         });
       }
       await this.docSvc.guardarBorrador(this.visita.id!, d);
     }
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   fechaStr(f: any): string {
     if (!f) return '';
     const d = f?.toDate ? f.toDate() : new Date(f);
@@ -523,29 +460,37 @@ export class ModalDocumentacionComponent implements OnInit {
     return this.observaciones().filter(o => o.prioridad === p).length;
   }
 
-  // ── Validación ─────────────────────────────────────────────────────────────
   validarCompleto(): boolean {
     const items = this.doc()?.items ?? [];
-    // Validar solo items normales, no los de obs
     for (const item of items.filter(i => !i.id.startsWith('obs_'))) {
       if (!item.fotos.length && !item.sinFotos) return false;
     }
-    // Validar fotos de observaciones
     for (const obs of this.observaciones()) {
       if (!this.fotoObs[obs.numero] && !this.sinFotoObs[obs.numero]) return false;
     }
     return true;
   }
 
-  // ── Finalizar ──────────────────────────────────────────────────────────────
   async onFinalizar(): Promise<void> {
     if (!this.validarCompleto()) {
-      alert(
-        'Faltan campos por completar.\n' +
-        'Sube una foto o marca "Sin fotos" en cada ítem.'
-      );
+      await this.dialog.confirm({
+        tipo: 'warn', icono: '⚠',
+        titulo:  'Campos incompletos',
+        mensaje: 'Faltan campos por completar.',
+        detalle: 'Sube una foto o marca "Sin fotos" en cada ítem de todas las secciones.',
+        btnOk:   'Entendido',
+      });
       return;
     }
+    const ok = await this.dialog.confirm({
+      tipo: 'success', icono: '✅',
+      titulo:    'Finalizar documentación',
+      mensaje:   `¿Confirmas finalizar la documentación de "${this.visita.sitioNombre}"?`,
+      detalle:   'Una vez finalizada no podrás modificarla a menos que un administrador la reabra.',
+      btnOk:     'Sí, finalizar',
+      btnCancel: 'Cancelar',
+    });
+    if (!ok) return;
     this.guardando.set(true);
     try {
       await this.docSvc.finalizar(this.visita.id!, this.doc()!);
@@ -555,12 +500,15 @@ export class ModalDocumentacionComponent implements OnInit {
     }
   }
 
-  // ── Admin: reabrir ─────────────────────────────────────────────────────────
   async onReabrir(): Promise<void> {
-    const ok = confirm(
-      '¿Confirmas reabrir la documentación de este sitio?\n' +
-      'Tendrán que volver a llenarla desde cero.'
-    );
+    const ok = await this.dialog.confirm({
+      tipo: 'danger', icono: '🔓',
+      titulo:    'Reabrir documentación',
+      mensaje:   `¿Confirmas reabrir la documentación de "${this.visita.sitioNombre}"?`,
+      detalle:   'Tendrán que volver a llenarla desde cero.',
+      btnOk:     'Sí, reabrir',
+      btnCancel: 'Cancelar',
+    });
     if (!ok) return;
     this.guardando.set(true);
     try {

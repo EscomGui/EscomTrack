@@ -22,4 +22,7 @@ export interface Visita {
     horaTermino?: any;
     creadaEn?: any;
     actualizadaEn?: any;
+
+    // En visita.model.ts agrega:
+    horaInicio?: any;
 }

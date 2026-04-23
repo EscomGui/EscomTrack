@@ -94,6 +94,7 @@ export class VisitasService {
   async marcarRealizado(visitaId: string): Promise<void> {
     await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
       estado:        'en_proceso',
+      horaInicio:    Timestamp.now(),
       actualizadoEn: Timestamp.now(),
     });
   }
@@ -136,6 +137,25 @@ export class VisitasService {
   try {
     await deleteDoc(doc(this.fs, `visitas/${visitaId}`));
   } catch {}
+  }
+
+    async actualizarTecnico(
+    visitaId: string,
+    tecnicoId: string,
+    tecnicoNombre: string
+  ): Promise<void> {
+    await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
+      tecnicoId,
+      tecnicoNombre,
+      actualizadoEn: Timestamp.now(),
+    });
+  }
+
+  async marcarTermino(visitaId: string): Promise<void> {
+    await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
+      horaTermino:   Timestamp.now(),
+      actualizadoEn: Timestamp.now(),
+    });
   }
 
   async actualizarEstado(visitaId: string, estado: EstadoVisita): Promise<void> {

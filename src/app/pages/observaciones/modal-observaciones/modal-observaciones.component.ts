@@ -1,13 +1,16 @@
 import { Component, inject, Input, Output, EventEmitter, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {
+  Firestore, collection, getDocs, query, where
+} from '@angular/fire/firestore';
 import { ObservacionesService } from '../../../core/services/observaciones.service';
 import { VisitasService } from '../../../core/services/visitas.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { DialogService } from '../../../core/services/dialog.service';
+import { DialogComponent } from '../../../shared/components/dialog/dialog.component';
 import {
-  ObservacionesGuardadas,
-  Observacion,
-  Prioridad
+  ObservacionesGuardadas, Observacion, Prioridad
 } from '../../../core/models/observacion.model';
 import { Visita } from '../../../core/models/visita.model';
 
@@ -17,10 +20,15 @@ interface ObsLocal {
   errorPri:    boolean;
 }
 
+interface TecnicoOpcion {
+  uid:    string;
+  nombre: string;
+}
+
 @Component({
   selector: 'app-modal-observaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DialogComponent],
   template: `
     <div class="modal-backdrop" (click)="onBackdrop($event)">
       <div class="modal-box" (click)="$event.stopPropagation()">
@@ -34,7 +42,7 @@ interface ObsLocal {
 
         <div class="modal-body">
 
-          <!-- ── BLOQUEADO ─────────────────────────────────── -->
+          <!-- ── BLOQUEADO ─────────────────────────────── -->
           @if (bloqueado()) {
 
             <div class="banner banner-lock mb-3">
@@ -75,26 +83,33 @@ interface ObsLocal {
               <div class="banner banner-warn mt-3">
                 <span>⚠</span>
                 Si reabres las observaciones, la documentación
-                de este sitio se borrará automáticamente.
+                se borrará automáticamente.
               </div>
             }
 
           }
 
-          <!-- ── EDITABLE ───────────────────────────────────── -->
+          <!-- ── EDITABLE ───────────────────────────────── -->
           @if (!bloqueado()) {
 
             <div class="section-label">Información</div>
             <div class="form-row">
               <div class="form-group">
                 <label>Técnico Responsable</label>
-                <select [(ngModel)]="tecnicoNombre">
-                  <option>HERNANDEZ</option>
-                  <option>Luis</option>
-                  <option>Rafa</option>
-                  <option>EDDI</option>
-                  <option>EDUARDO</option>
-                </select>
+                @if (cargandoTecnicos()) {
+                  <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
+                    <span class="spinner"></span>
+                    <span class="text-muted">Cargando técnicos...</span>
+                  </div>
+                } @else {
+                  <select [(ngModel)]="tecnicoSeleccionado"
+                          (change)="onTecnicoChange()">
+                    <option value="">— Selecciona técnico —</option>
+                    @for (t of tecnicos(); track t.uid) {
+                      <option [value]="t.uid">{{ t.nombre }}</option>
+                    }
+                  </select>
+                }
               </div>
               <div class="form-group">
                 <label>Fecha de visita</label>
@@ -196,6 +211,8 @@ interface ObsLocal {
 
       </div>
     </div>
+
+    <app-dialog />
   `,
   styles: [`.mb-3 { margin-bottom: 12px; }`],
 })
@@ -205,32 +222,68 @@ export class ModalObservacionesComponent implements OnInit {
   @Output() guardado  = new EventEmitter<void>();
   @Output() reabierto = new EventEmitter<void>();
 
+  private fs         = inject(Firestore);
   private obsSvc     = inject(ObservacionesService);
   private visitasSvc = inject(VisitasService);
   private auth       = inject(AuthService);
+  private dialog     = inject(DialogService);
 
-  guardadas   = signal<ObservacionesGuardadas | null>(null);
-  bloqueado   = signal(false);
-  guardando   = signal(false);
-  errorGlobal = signal('');
-  obsList     = signal<ObsLocal[]>([
+  guardadas        = signal<ObservacionesGuardadas | null>(null);
+  bloqueado        = signal(false);
+  guardando        = signal(false);
+  errorGlobal      = signal('');
+  cargandoTecnicos = signal(true);
+  tecnicos         = signal<TecnicoOpcion[]>([]);
+  obsList          = signal<ObsLocal[]>([
     { descripcion: '', prioridad: '', errorPri: false }
   ]);
 
-  sinObservaciones = false;
-  tecnicoNombre    = '';
-  fecha            = new Date().toISOString().split('T')[0];
+  sinObservaciones    = false;
+  tecnicoSeleccionado = '';
+  tecnicoNombre       = '';
+  fecha               = new Date().toISOString().split('T')[0];
 
   get esAdmin(): boolean { return this.auth.esAdmin; }
 
   async ngOnInit(): Promise<void> {
-    this.tecnicoNombre = this.auth.usuarioActual()?.nombre ?? '';
+    await this.cargarTecnicos();
+
+    const usuarioActual = this.auth.usuarioActual();
+    if (usuarioActual) {
+      this.tecnicoSeleccionado = usuarioActual.uid;
+      this.tecnicoNombre       = usuarioActual.nombre;
+    }
+
     const obs = await this.obsSvc.getObservaciones(this.visita.id!);
     if (obs) {
       this.guardadas.set(obs);
       this.bloqueado.set(obs.bloqueada);
       if (!obs.bloqueada) this.cargarEnFormulario(obs);
     }
+  }
+
+  private async cargarTecnicos(): Promise<void> {
+    try {
+      const q    = query(
+        collection(this.fs, 'usuarios'),
+        where('activo', '==', true)
+      );
+      const snap = await getDocs(q);
+      const lista: TecnicoOpcion[] = snap.docs.map(d => ({
+        uid:    d.id,
+        nombre: (d.data() as any).nombre,
+      }));
+      this.tecnicos.set(lista);
+    } catch (e) {
+      console.error('Error cargando técnicos:', e);
+    } finally {
+      this.cargandoTecnicos.set(false);
+    }
+  }
+
+  onTecnicoChange(): void {
+    const t = this.tecnicos().find(x => x.uid === this.tecnicoSeleccionado);
+    this.tecnicoNombre = t?.nombre ?? '';
   }
 
   fmtFecha(f: any): string {
@@ -272,6 +325,8 @@ export class ModalObservacionesComponent implements OnInit {
   }
 
   private cargarEnFormulario(obs: ObservacionesGuardadas): void {
+    const t = this.tecnicos().find(x => x.nombre === obs.tecnicoNombre);
+    if (t) this.tecnicoSeleccionado = t.uid;
     this.tecnicoNombre    = obs.tecnicoNombre;
     this.sinObservaciones = obs.sinObservaciones;
     if (!obs.sinObservaciones && obs.observaciones.length) {
@@ -284,6 +339,11 @@ export class ModalObservacionesComponent implements OnInit {
   }
 
   async onGuardar(): Promise<void> {
+    if (!this.tecnicoSeleccionado) {
+      this.errorGlobal.set('Selecciona el técnico responsable.');
+      return;
+    }
+
     if (this.sinObservaciones) {
       await this.guardarFinal(true, []);
       return;
@@ -336,9 +396,14 @@ export class ModalObservacionesComponent implements OnInit {
         fecha:            new Date(this.fecha),
         sinObservaciones: sinObs,
         observaciones,
-        tecnicoId:        this.auth.usuarioActual()!.uid,
+        tecnicoId:        this.tecnicoSeleccionado,
         tecnicoNombre:    this.tecnicoNombre,
       });
+      await this.visitasSvc.actualizarTecnico(
+        this.visita.id!,
+        this.tecnicoSeleccionado,
+        this.tecnicoNombre
+      );
       this.guardado.emit();
     } finally {
       this.guardando.set(false);
@@ -346,10 +411,14 @@ export class ModalObservacionesComponent implements OnInit {
   }
 
   async onReabrir(): Promise<void> {
-    const ok = confirm(
-      '¿Confirmas reabrir las observaciones?\n' +
-      'La documentación se borrará automáticamente.'
-    );
+    const ok = await this.dialog.confirm({
+      tipo: 'danger', icono: '🔓',
+      titulo:    'Reabrir observaciones',
+      mensaje:   '¿Confirmas reabrir las observaciones?',
+      detalle:   'La documentación de este sitio se borrará automáticamente.',
+      btnOk:     'Sí, reabrir',
+      btnCancel: 'Cancelar',
+    });
     if (!ok) return;
     this.guardando.set(true);
     try {

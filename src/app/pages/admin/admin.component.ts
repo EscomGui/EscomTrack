@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   Firestore, collection, collectionData,
-  doc, setDoc, updateDoc, addDoc,
+  doc, setDoc, updateDoc,
   Timestamp, query, where, deleteDoc
 } from '@angular/fire/firestore';
 import {
@@ -13,13 +13,15 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar.component
 import { VisitasService } from '../../core/services/visitas.service';
 import { ObservacionesService } from '../../core/services/observaciones.service';
 import { DocumentacionService } from '../../core/services/documentacion.service';
+import { DialogService } from '../../core/services/dialog.service';
+import { DialogComponent } from '../../shared/components/dialog/dialog.component';
 import { Usuario } from '../../core/models/usuario.model';
 import { Visita, EstadoVisita } from '../../core/models/visita.model';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, NavbarComponent, DialogComponent],
   template: `
     <app-navbar />
 
@@ -29,7 +31,6 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
         <p>Gestión de usuarios, visitas y configuración del sistema.</p>
       </div>
 
-      <!-- Tabs -->
       <div class="tabs">
         <button class="tab-btn" [class.active]="tab() === 'usuarios'"
                 (click)="tab.set('usuarios')">
@@ -45,7 +46,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
         </button>
       </div>
 
-      <!-- ── TAB USUARIOS ─────────────────────────────────────────────────── -->
+      <!-- ── TAB USUARIOS ────────────────────────────────────────────── -->
       @if (tab() === 'usuarios') {
         <div class="tab-content">
 
@@ -105,6 +106,12 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
             </div>
           }
 
+          <div class="banner banner-warn mb-3">
+            <span>⚠</span>
+            Eliminar un usuario borra su acceso permanentemente.
+            Sus registros históricos se conservan en el sistema.
+          </div>
+
           @if (cargandoUsuarios()) {
             <div class="estado-carga">
               <span class="spinner"></span><span>Cargando usuarios...</span>
@@ -127,22 +134,31 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                     <td class="text-muted">{{ u.correo }}</td>
                     <td>
                       <span class="badge"
-                            [class]="u.rol === 'admin' ? 'badge-obs' : 'badge-pendiente'">
+                            [class]="u.rol === 'admin'
+                              ? 'badge-obs' : 'badge-pendiente'">
                         {{ u.rol === 'admin' ? 'Admin' : 'Técnico' }}
                       </span>
                     </td>
                     <td style="text-align:center">
                       <span class="badge"
-                            [class]="u.activo ? 'badge-completo' : 'badge-en-proceso'">
+                            [class]="u.activo
+                              ? 'badge-completo' : 'badge-en-proceso'">
                         {{ u.activo ? 'Activo' : 'Inactivo' }}
                       </span>
                     </td>
                     <td style="text-align:right">
-                      <button class="btn btn-sm"
-                              [class]="u.activo ? 'btn-danger' : 'btn-success'"
-                              (click)="toggleActivo(u)">
-                        {{ u.activo ? 'Desactivar' : 'Activar' }}
-                      </button>
+                      <div style="display:flex;gap:6px;justify-content:flex-end">
+                        <button class="btn btn-sm"
+                                [class]="u.activo ? 'btn-secondary' : 'btn-success'"
+                                (click)="toggleActivo(u)">
+                          {{ u.activo ? 'Desactivar' : 'Activar' }}
+                        </button>
+                        <button class="btn btn-danger btn-sm btn-icon"
+                                title="Eliminar usuario permanentemente"
+                                (click)="eliminarUsuario(u)">
+                          🗑
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 }
@@ -153,7 +169,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
         </div>
       }
 
-      <!-- ── TAB VISITAS ──────────────────────────────────────────────────── -->
+      <!-- ── TAB VISITAS ─────────────────────────────────────────────── -->
       @if (tab() === 'visitas') {
         <div class="tab-content">
 
@@ -201,17 +217,21 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                 <thead>
                   <tr>
                     <th>Sitio</th>
+                    <th>Técnico</th>
                     <th>Estado</th>
                     <th>Salida</th>
                     <th>Llegada</th>
                     <th>Término</th>
-                    <th style="text-align:right">Acciones admin</th>
+                    <th style="text-align:right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (v of visitasBusqueda(); track v.id) {
                     <tr [class]="'row-' + rowClass(v.estado)">
                       <td class="col-nombre">{{ v.sitioNombre }}</td>
+                      <td class="text-muted" style="font-size:12px">
+                        {{ v.tecnicoNombre || '—' }}
+                      </td>
                       <td>
                         <span class="badge" [class]="badgeClass(v.estado)">
                           {{ labelEstado(v.estado) }}
@@ -222,7 +242,8 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                       <td class="text-muted">{{ fmtHora(v.horaTermino) }}</td>
                       <td style="text-align:right">
                         <div class="col-acc-inner">
-                          @if (v.estado === 'obs_guardadas' || v.estado === 'completo') {
+                          @if (v.estado === 'obs_guardadas' ||
+                               v.estado === 'completo') {
                             <button class="btn btn-danger btn-sm"
                                     (click)="reabrirObs(v)">
                               🔓 Obs.
@@ -236,7 +257,6 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                           }
                           @if (v.estado !== 'pendiente') {
                             <button class="btn btn-secondary btn-sm"
-                                    title="Regresar a pendiente"
                                     (click)="regresarPendiente(v)">
                               ↩ Pendiente
                             </button>
@@ -263,7 +283,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
         </div>
       }
 
-      <!-- ── TAB SITIOS ───────────────────────────────────────────────────── -->
+      <!-- ── TAB SITIOS ──────────────────────────────────────────────── -->
       @if (tab() === 'sitios') {
         <div class="tab-content">
 
@@ -306,9 +326,9 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                        placeholder="Ej. Nuevo Sitio Veracruz" />
               </div>
               <div class="form-group">
-                <label>Posición (número en la lista)</label>
+                <label>Posición en la lista</label>
                 <input type="number" [(ngModel)]="nuevoSitioPos"
-                       placeholder="Ej. 4 (se inserta en esa posición)" [min]="1" />
+                       placeholder="Ej. 4" [min]="1" />
               </div>
             </div>
             @if (errorSitio()) {
@@ -334,73 +354,119 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
         </div>
       }
 
+      <!-- Modal confirmar eliminar usuario -->
+      @if (usuarioAEliminar()) {
+        <div class="modal-backdrop" (click)="usuarioAEliminar.set(null)">
+          <div class="modal-box modal-confirm"
+               (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <span class="modal-title" style="color:#991B1B">
+                ⚠ Eliminar usuario permanentemente
+              </span>
+            </div>
+            <div class="modal-body">
+              <div class="banner banner-danger mb-3">
+                <span>🗑</span>
+                Esta acción <strong>no se puede deshacer</strong>.
+              </div>
+              <p style="margin-bottom:12px;color:var(--gris-osc)">
+                Estás a punto de eliminar permanentemente al usuario:
+              </p>
+              <div class="confirm-user-card">
+                <div class="confirm-avatar">
+                  {{ usuarioAEliminar()!.nombre.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <div style="font-weight:600;color:var(--gris-osc)">
+                    {{ usuarioAEliminar()!.nombre }}
+                  </div>
+                  <div class="text-muted">{{ usuarioAEliminar()!.correo }}</div>
+                  <span class="badge"
+                        [class]="usuarioAEliminar()!.rol === 'admin'
+                          ? 'badge-obs' : 'badge-pendiente'"
+                        style="margin-top:4px">
+                    {{ usuarioAEliminar()!.rol === 'admin' ? 'Admin' : 'Técnico' }}
+                  </span>
+                </div>
+              </div>
+              <p class="text-muted" style="margin-top:12px;font-size:12px">
+                Sus registros históricos se conservarán pero
+                ya no podrá iniciar sesión.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary"
+                      (click)="usuarioAEliminar.set(null)">
+                Cancelar
+              </button>
+              <button class="btn btn-danger"
+                      [disabled]="eliminandoUsuario()"
+                      (click)="confirmarEliminarUsuario()">
+                @if (eliminandoUsuario()) { <span class="spinner"></span> }
+                Sí, eliminar permanentemente
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
     </div>
+
+    <app-dialog />
   `,
   styles: [`
     .admin-wrap    { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
     .admin-header  { margin-bottom: 28px; }
     .admin-header h1 { margin-bottom: 4px; }
     .tabs {
-      display: flex;
-      gap: 2px;
+      display: flex; gap: 2px;
       border-bottom: 1px solid var(--gris-border);
-      margin-bottom: 24px;
-      overflow-x: auto;
+      margin-bottom: 24px; overflow-x: auto;
     }
     .tab-btn {
-      padding: 10px 20px;
-      border: none;
-      background: transparent;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--gris-med);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: all var(--trans);
-      white-space: nowrap;
+      padding: 10px 20px; border: none; background: transparent;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--gris-med); cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: all var(--trans); white-space: nowrap;
       &:hover  { color: var(--azul-clar); }
       &.active { color: var(--azul-clar); border-bottom-color: var(--azul-clar); }
     }
     .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 16px;
     }
     .form-card {
-      background: #fff;
-      border: 1px solid var(--gris-border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow-xs);
+      background: #fff; border: 1px solid var(--gris-border);
+      border-radius: var(--radius-lg); padding: 20px;
+      margin-bottom: 20px; box-shadow: var(--shadow-xs);
     }
     .filtros-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr auto;
-      gap: 12px;
-      align-items: flex-end;
+      display: grid; grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px; align-items: flex-end;
     }
     .estado-carga {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      padding: 40px;
-      color: var(--gris-med);
+      display: flex; justify-content: center; align-items: center;
+      gap: 12px; padding: 40px; color: var(--gris-med);
     }
     .estado-vacio {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      padding: 40px;
-      color: var(--gris-med);
-      text-align: center;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; padding: 40px; color: var(--gris-med); text-align: center;
     }
     .mb-3 { margin-bottom: 12px; }
+    .modal-confirm { max-width: 420px; }
+    .confirm-user-card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px; background: var(--rojo-bg);
+      border-radius: var(--radius-md); border: 1px solid var(--rojo-borde);
+    }
+    .confirm-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--rojo-osc); color: #fff;
+      font-size: 18px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
     @media (max-width: 768px) {
       .filtros-row { grid-template-columns: 1fr 1fr; }
       .admin-wrap  { padding: 76px 12px 24px; }
@@ -413,8 +479,8 @@ export class AdminComponent implements OnInit {
   private visitasSvc = inject(VisitasService);
   private obsSvc     = inject(ObservacionesService);
   private docSvc     = inject(DocumentacionService);
+  private dialog     = inject(DialogService);
 
-  // ── Estado ────────────────────────────────────────────────────────────────
   tab               = signal<'usuarios' | 'visitas' | 'sitios'>('usuarios');
   usuarios          = signal<Usuario[]>([]);
   cargandoUsuarios  = signal(true);
@@ -422,27 +488,27 @@ export class AdminComponent implements OnInit {
   creandoUsuario    = signal(false);
   errorUsuario      = signal('');
 
+  usuarioAEliminar  = signal<Usuario | null>(null);
+  eliminandoUsuario = signal(false);
+
   visitasBusqueda   = signal<Visita[]>([]);
   buscando          = signal(false);
   busquedaRealizada = signal(false);
 
-  // Nuevo sitio
-  agregandoSitio  = signal(false);
-  errorSitio      = signal('');
-  exitoSitio      = signal('');
-  nuevoSitioTipo  = 'poliza';
-  nuevoSitioAnio  = new Date().getFullYear();
-  nuevoSitioMes   = new Date().getMonth() + 1;
+  agregandoSitio   = signal(false);
+  errorSitio       = signal('');
+  exitoSitio       = signal('');
+  nuevoSitioTipo   = 'poliza';
+  nuevoSitioAnio   = new Date().getFullYear();
+  nuevoSitioMes    = new Date().getMonth() + 1;
   nuevoSitioNombre = '';
-  nuevoSitioPos   = 1;
+  nuevoSitioPos    = 1;
 
-  // Formulario usuario
   nuevoNombre   = '';
   nuevoCorreo   = '';
   nuevoPassword = '';
   nuevoRol: 'tecnico' | 'admin' = 'tecnico';
 
-  // Filtros
   filtroTipo = 'poliza';
   filtroAnio = new Date().getFullYear();
   filtroMes  = new Date().getMonth() + 1;
@@ -456,13 +522,14 @@ export class AdminComponent implements OnInit {
     { num:11, nombre:'Noviembre' }, { num:12, nombre:'Diciembre' },
   ];
 
-  ngOnInit(): void {
-    this.cargarUsuarios();
-  }
+  private usuariosSub?: any;
+
+  ngOnInit(): void { this.cargarUsuarios(); }
 
   private cargarUsuarios(): void {
+    if (this.usuariosSub) this.usuariosSub.unsubscribe();
     const q = query(collection(this.fs, 'usuarios'));
-    (collectionData(q, { idField: 'uid' }) as any)
+    this.usuariosSub = (collectionData(q, { idField: 'uid' }) as any)
       .subscribe((us: Usuario[]) => {
         this.usuarios.set(us);
         this.cargandoUsuarios.set(false);
@@ -505,14 +572,44 @@ export class AdminComponent implements OnInit {
   }
 
   async toggleActivo(u: Usuario): Promise<void> {
-    const ok = confirm(
-      `¿Confirmas ${u.activo ? 'desactivar' : 'activar'} a ${u.nombre}?`
-    );
+    const ok = await this.dialog.confirm({
+      tipo:      u.activo ? 'warn' : 'success',
+      icono:     u.activo ? '⏸' : '▶',
+      titulo:    u.activo ? 'Desactivar usuario' : 'Activar usuario',
+      mensaje:   `¿Confirmas ${u.activo ? 'desactivar' : 'activar'} a "${u.nombre}"?`,
+      btnOk:     u.activo ? 'Sí, desactivar' : 'Sí, activar',
+      btnCancel: 'Cancelar',
+    });
     if (!ok) return;
     await updateDoc(doc(this.fs, `usuarios/${u.uid}`), {
       activo:        !u.activo,
       actualizadoEn: Timestamp.now(),
     });
+  }
+
+  eliminarUsuario(u: Usuario): void {
+    this.usuarioAEliminar.set(u);
+  }
+
+  async confirmarEliminarUsuario(): Promise<void> {
+    const u = this.usuarioAEliminar();
+    if (!u) return;
+    this.eliminandoUsuario.set(true);
+    try {
+      await deleteDoc(doc(this.fs, `usuarios/${u.uid}`));
+      this.usuarios.update(lista => lista.filter(x => x.uid !== u.uid));
+      this.usuarioAEliminar.set(null);
+    } catch (e: any) {
+      await this.dialog.confirm({
+        tipo: 'danger', icono: '❌',
+        titulo:  'Error al eliminar',
+        mensaje: 'No se pudo eliminar el usuario.',
+        detalle: e.message,
+        btnOk:   'Cerrar',
+      });
+    } finally {
+      this.eliminandoUsuario.set(false);
+    }
   }
 
   // ── Visitas ───────────────────────────────────────────────────────────────
@@ -538,32 +635,54 @@ export class AdminComponent implements OnInit {
   }
 
   async reabrirObs(v: Visita): Promise<void> {
-    const ok = confirm(
-      `¿Reabrir observaciones de "${v.sitioNombre}"?\n` +
-      `La documentación se borrará automáticamente.`
-    );
+    const ok = await this.dialog.confirm({
+      tipo: 'danger', icono: '🔓',
+      titulo:    'Reabrir observaciones',
+      mensaje:   `¿Reabrir observaciones de "${v.sitioNombre}"?`,
+      detalle:   'La documentación se borrará automáticamente.',
+      btnOk:     'Sí, reabrir',
+      btnCancel: 'Cancelar',
+    });
     if (!ok) return;
     await this.visitasSvc.reabrirObservaciones(v.id!);
   }
 
   async reabrirDoc(v: Visita): Promise<void> {
-    const ok = confirm(`¿Reabrir documentación de "${v.sitioNombre}"?`);
+    const ok = await this.dialog.confirm({
+      tipo: 'warn', icono: '🔓',
+      titulo:    'Reabrir documentación',
+      mensaje:   `¿Reabrir documentación de "${v.sitioNombre}"?`,
+      detalle:   'Tendrán que volver a llenarla desde cero.',
+      btnOk:     'Sí, reabrir',
+      btnCancel: 'Cancelar',
+    });
     if (!ok) return;
     await this.visitasSvc.reabrirDocumentacion(v.id!);
   }
 
   async regresarPendiente(v: Visita): Promise<void> {
-    const ok = confirm(
-      `¿Regresar "${v.sitioNombre}" a pendiente?\n` +
-      `Se borrarán observaciones y documentación.`
-    );
+    const ok = await this.dialog.confirm({
+      tipo: 'danger', icono: '⚠',
+      titulo:    'Regresar a pendiente',
+      mensaje:   `¿Regresar "${v.sitioNombre}" a pendiente?`,
+      detalle:   'Se borrarán observaciones, documentación y horarios. Esta acción no se puede deshacer.',
+      btnOk:     'Sí, regresar',
+      btnCancel: 'Cancelar',
+    });
     if (!ok) return;
     await this.visitasSvc.reabrirObservaciones(v.id!);
     await this.visitasSvc.regresarPendiente(v.id!);
   }
 
   async eliminarVisita(v: Visita): Promise<void> {
-    const ok = confirm(`¿Eliminar permanentemente "${v.sitioNombre}"?`);
+    const ok = await this.dialog.confirm({
+      tipo: 'danger', icono: '🗑',
+      titulo:    'Eliminar visita',
+      mensaje:   `¿Eliminar permanentemente "${v.sitioNombre}"?`,
+      detalle:   'Esta acción no se puede deshacer. Se borrarán observaciones y documentación.',
+      btnOk:     'Sí, eliminar',
+      btnCancel: 'Cancelar',
+    });
     if (!ok) return;
     await this.visitasSvc.eliminarVisita(v.id!);
     this.visitasBusqueda.update(vs => vs.filter(x => x.id !== v.id));
@@ -573,18 +692,14 @@ export class AdminComponent implements OnInit {
   async agregarSitio(): Promise<void> {
     this.errorSitio.set('');
     this.exitoSitio.set('');
-
     if (!this.nuevoSitioNombre.trim()) {
       this.errorSitio.set('El nombre del sitio es obligatorio.');
       return;
     }
-
     this.agregandoSitio.set(true);
     try {
-      // Generar ID único para el sitio extra
       const timestamp = Date.now();
       const id = `${this.nuevoSitioTipo}_${this.nuevoSitioAnio}_${this.nuevoSitioMes}_extra_${timestamp}`;
-
       await setDoc(doc(this.fs, `visitas/${id}`), {
         id,
         sitioId:       `extra_${timestamp}`,
@@ -603,9 +718,8 @@ export class AdminComponent implements OnInit {
         creadoEn:      Timestamp.now(),
         actualizadoEn: Timestamp.now(),
       });
-
       this.exitoSitio.set(
-        `"${this.nuevoSitioNombre}" agregado correctamente al mes de ` +
+        `"${this.nuevoSitioNombre}" agregado al mes de ` +
         `${this.meses.find(m => m.num === +this.nuevoSitioMes)?.nombre} ${this.nuevoSitioAnio}.`
       );
       this.nuevoSitioNombre = '';
@@ -621,7 +735,9 @@ export class AdminComponent implements OnInit {
   fmtHora(t: any): string {
     if (!t) return '—';
     const d = t?.toDate ? t.toDate() : new Date(t);
-    return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString('es-MX', {
+      hour: '2-digit', minute: '2-digit'
+    });
   }
 
   rowClass(e: EstadoVisita): string {

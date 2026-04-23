@@ -3,11 +3,12 @@ import { Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import { AuthService } from './core/services/auth.service';
+import { DialogComponent } from './shared/components/dialog/dialog.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule],
+  imports: [RouterOutlet, CommonModule, DialogComponent],
   template: `
     @if (cargando) {
       <div class="app-loading">
@@ -23,6 +24,9 @@ import { AuthService } from './core/services/auth.service';
           © {{ anio }} RAGUI · ESCOM TRACK · Todos los derechos reservados
         </footer>
       </div>
+
+      <!-- Diálogo global — siempre visible -->
+      <app-dialog />
     }
   `,
   styles: [`

@@ -37,6 +37,7 @@ export class ObservacionesService {
       actualizadoEn: Timestamp.now(),
     });
     await this.visitas.actualizarEstado(visitaId, 'obs_guardadas');
+    await this.visitas.marcarTermino(visitaId);
   }
 
   async desbloquearObservaciones(visitaId: string): Promise<void> {
