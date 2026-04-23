@@ -12,7 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
 
       <div class="login-left">
         <div class="brand">
-          <span class="b-escom">ESCOM</span><span class="b-track"></span>
+          <span class="b-escom">ESCOM</span><span class="b-track">TRACK</span>
         </div>
         <p class="tagline">
           Sistema de seguimiento, evidencia y reportes para sitios
@@ -22,12 +22,12 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="feat"><span class="feat-ico">📋</span>Pólizas de Granjas</div>
           <div class="feat"><span class="feat-ico">🏭</span>CEDIS</div>
           <div class="feat"><span class="feat-ico">📸</span>Evidencia fotográfica</div>
-          <div class="feat"><span class="feat-ico">📄</span>Generación de reportes .docx / .xlsx</div>
+          <div class="feat"><span class="feat-ico">📄</span>Generación de reportes</div>
         </div>
-        <div class="cliente">© RAGUI</div>
+        <div class="cliente">Grupo Pecuario San Antonio S.A. de C.V.</div>
       </div>
 
-      <div class="login-right">
+      <div class="login-right" style="--login-bg: url('/assets/login-bg.jpg')">
         <div class="login-card">
           <h2>Iniciar sesión</h2>
           <p class="login-sub">Ingresa con tus credenciales asignadas.</p>
@@ -52,14 +52,21 @@ import { AuthService } from '../../core/services/auth.service';
             </div>
             <div class="form-group">
               <label>Contraseña</label>
-              <input
-                type="password"
-                [(ngModel)]="password"
-                name="password"
-                placeholder="••••••••"
-                required
-                [disabled]="cargando()"
-              />
+              <div class="input-pwd">
+                <input
+                  [type]="mostrarPwd ? 'text' : 'password'"
+                  [(ngModel)]="password"
+                  name="password"
+                  placeholder="••••••••"
+                  required
+                  [disabled]="cargando()"
+                />
+                <button type="button"
+                        class="pwd-toggle"
+                        (click)="mostrarPwd = !mostrarPwd">
+                  {{ mostrarPwd ? '🙈' : '👁' }}
+                </button>
+              </div>
             </div>
             <button
               type="submit"
@@ -74,19 +81,25 @@ import { AuthService } from '../../core/services/auth.service';
             </button>
           </form>
         </div>
-        <p class="login-footer"> ESCOM · 2026</p>
+        <p class="login-footer">Sistemas ESCOM · {{ anio }}</p>
       </div>
 
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      height: 100vh;
+      overflow: hidden;
+    }
+
     .login-wrap {
-      min-height: 100vh;
+      height: 100vh;
       display: grid;
       grid-template-columns: 1fr 1fr;
     }
 
-    /* ── Panel izquierdo ── */
+    /* Panel izquierdo */
     .login-left {
       background: var(--azul-osc);
       display: flex;
@@ -103,15 +116,28 @@ import { AuthService } from '../../core/services/auth.service';
     .feat-ico     { font-size: 16px; width: 24px; }
     .cliente      { font-size: 12px; color: rgba(255,255,255,.3); margin-top: auto; }
 
-    /* ── Panel derecho ── */
+    /* Panel derecho */
     .login-right {
       background: var(--gris-bg);
+      background-image: var(--login-bg, none);
+      background-size: cover;
+      background-position: center;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       padding: 64px 40px;
+      position: relative;
     }
+
+    .login-right::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,.15);
+      backdrop-filter: blur(1px);
+    }
+
     .login-card {
       background: #fff;
       border-radius: var(--radius-xl);
@@ -120,24 +146,54 @@ import { AuthService } from '../../core/services/auth.service';
       padding: 36px 32px;
       width: 100%;
       max-width: 380px;
+      position: relative;
+      z-index: 1;
     }
     .login-card h2  { font-size: 22px; margin-bottom: 6px; }
     .login-sub      { font-size: 13px; color: var(--gris-med); margin-bottom: 24px; }
-    .login-footer   { font-size: 11px; color: var(--gris-med); margin-top: 24px; text-align: center; }
+    .login-footer   {
+      font-size: 11px; color: var(--gris-med);
+      margin-top: 24px; text-align: center;
+      position: relative; z-index: 1;
+    }
+
+    /* Input con ojo */
+    .input-pwd {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-pwd input { padding-right: 40px; }
+    .pwd-toggle {
+      position: absolute;
+      right: 10px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0;
+      line-height: 1;
+      color: var(--gris-med);
+      transition: color var(--trans);
+      &:hover { color: var(--gris-osc); }
+    }
 
     @media (max-width: 768px) {
       .login-wrap { grid-template-columns: 1fr; }
       .login-left { display: none; }
+      .login-right { padding: 40px 24px; }
     }
   `],
 })
 export class LoginComponent {
   private auth = inject(AuthService);
 
-  correo   = '';
-  password = '';
-  cargando = signal(false);
-  error    = signal('');
+  correo     = '';
+  password   = '';
+  mostrarPwd = false;
+  anio       = new Date().getFullYear();
+  cargando   = signal(false);
+  error      = signal('');
 
   async onLogin(): Promise<void> {
     if (!this.correo || !this.password) return;

@@ -1,5 +1,4 @@
 import { Injectable, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import {
   Firestore, collection, collectionData, doc,
   setDoc, updateDoc, query, where, orderBy,
@@ -12,7 +11,6 @@ import { Visita, EstadoVisita } from '../models/visita.model';
 export class VisitasService {
   private fs = inject(Firestore);
 
-  // ── Crear visitas del mes si no existen ───────────────────────────────────
   async crearVisitasMes(
     sitios: { id: string; nombre: string }[],
     tipo: 'poliza' | 'cedis',
@@ -25,40 +23,35 @@ export class VisitasService {
       where('anio', '==', anio),
       where('mes',  '==', mes),
     );
-    const snap      = await getDocs(q);
+    const snap       = await getDocs(q);
     const existentes = new Set(snap.docs.map(d => d.id));
-
-    const batch     = writeBatch(this.fs);
+    const batch      = writeBatch(this.fs);
     let   hayCambios = false;
 
     for (const s of sitios) {
       const id = `${tipo}_${anio}_${mes}_${s.id}`;
       if (existentes.has(id)) continue;
-
       const docRef = doc(this.fs, `visitas/${id}`);
       batch.set(docRef, {
         id,
         sitioId:       s.id,
         sitioNombre:   s.nombre,
-        tipo,
-        mes,
-        anio,
+        tipo, mes, anio,
         tecnicoId:     '',
         tecnicoNombre: '',
         estado:        'pendiente',
         horaSalida:    null,
         horaLlegada:   null,
+        horaInicio:    null,
         horaTermino:   null,
         creadoEn:      Timestamp.now(),
         actualizadoEn: Timestamp.now(),
       });
       hayCambios = true;
     }
-
     if (hayCambios) await batch.commit();
   }
 
-  // ── Observable de visitas del mes ─────────────────────────────────────────
   getVisitasPorMes(
     tipo: 'poliza' | 'cedis',
     anio: number,
@@ -99,16 +92,72 @@ export class VisitasService {
     });
   }
 
-  async regresarPendiente(visitaId: string): Promise<void> {
+  async marcarTermino(visitaId: string): Promise<void> {
     await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
-      estado:        'pendiente',
-      horaSalida:    null,
-      horaLlegada:   null,
-      horaTermino:   null,
+      horaTermino:   Timestamp.now(),
       actualizadoEn: Timestamp.now(),
     });
   }
 
+  async actualizarEstado(
+    visitaId: string,
+    estado: EstadoVisita
+  ): Promise<void> {
+    await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
+      estado,
+      actualizadoEn: Timestamp.now(),
+    });
+  }
+
+  async actualizarTecnico(
+    visitaId: string,
+    tecnicoId: string,
+    tecnicoNombre: string
+  ): Promise<void> {
+    await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
+      tecnicoId,
+      tecnicoNombre,
+      actualizadoEn: Timestamp.now(),
+    });
+  }
+
+  // ── Regresar a estado específico ──────────────────────────────────────────
+  async regresarAEstado(
+    visitaId: string,
+    estado: EstadoVisita
+  ): Promise<void> {
+    const cambios: any = {
+      estado,
+      actualizadoEn: Timestamp.now(),
+    };
+
+    // Solo si regresa a pendiente se borra el técnico y horarios
+    if (estado === 'pendiente') {
+      cambios.tecnicoId     = '';
+      cambios.tecnicoNombre = '';
+      cambios.horaSalida    = null;
+      cambios.horaLlegada   = null;
+      cambios.horaInicio    = null;
+      cambios.horaTermino   = null;
+    }
+
+    // Si regresa a en_proceso o antes — borrar obs y doc
+    if (['pendiente','en_camino','en_sitio','en_proceso'].includes(estado)) {
+      await this.borrarDocumentacion(visitaId);
+      try {
+        await deleteDoc(doc(this.fs, `observaciones/${visitaId}`));
+      } catch {}
+    }
+
+    // Si regresa a obs_guardadas — solo borrar documentación
+    if (estado === 'obs_guardadas') {
+      await this.borrarDocumentacion(visitaId);
+    }
+
+    await updateDoc(doc(this.fs, `visitas/${visitaId}`), cambios);
+  }
+
+  // ── Reabrir ───────────────────────────────────────────────────────────────
   async reabrirObservaciones(visitaId: string): Promise<void> {
     await this.borrarDocumentacion(visitaId);
     await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
@@ -133,39 +182,25 @@ export class VisitasService {
     });
   }
 
+  async regresarPendiente(visitaId: string): Promise<void> {
+    await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
+      estado:        'pendiente',
+      tecnicoId:     '',
+      tecnicoNombre: '',
+      horaSalida:    null,
+      horaLlegada:   null,
+      horaInicio:    null,
+      horaTermino:   null,
+      actualizadoEn: Timestamp.now(),
+    });
+  }
+
   async eliminarVisita(visitaId: string): Promise<void> {
-  try {
-    await deleteDoc(doc(this.fs, `visitas/${visitaId}`));
-  } catch {}
+    try {
+      await deleteDoc(doc(this.fs, `visitas/${visitaId}`));
+    } catch {}
   }
 
-    async actualizarTecnico(
-    visitaId: string,
-    tecnicoId: string,
-    tecnicoNombre: string
-  ): Promise<void> {
-    await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
-      tecnicoId,
-      tecnicoNombre,
-      actualizadoEn: Timestamp.now(),
-    });
-  }
-
-  async marcarTermino(visitaId: string): Promise<void> {
-    await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
-      horaTermino:   Timestamp.now(),
-      actualizadoEn: Timestamp.now(),
-    });
-  }
-
-  async actualizarEstado(visitaId: string, estado: EstadoVisita): Promise<void> {
-  await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
-    estado,
-    actualizadoEn: Timestamp.now(),
-  });
-  }
-
-  // ── Borrar documentación ──────────────────────────────────────────────────
   private async borrarDocumentacion(visitaId: string): Promise<void> {
     try {
       await deleteDoc(doc(this.fs, `documentacion/${visitaId}`));

@@ -7,22 +7,19 @@ export type EstadoVisita =
     | 'completo';
 
 export interface Visita {
-    id?: string;
-    sitioId: string;
-    sitioNombre: string;
-    tipo: 'poliza' | 'cedis';
-    mes: number;
-    anio: number;
-    tecnicoId: string;
-    tecnicoNombre: string;
-    estado: EstadoVisita;
-
-    horaSalida?: any;
-    horaLlegada?: any;
-    horaTermino?: any;
-    creadaEn?: any;
-    actualizadaEn?: any;
-
-    // En visita.model.ts agrega:
-    horaInicio?: any;
+    id?:            string;
+    sitioId:        string;
+    sitioNombre:    string;
+    tipo:           'poliza' | 'cedis';
+    mes:            number;
+    anio:           number;
+    tecnicoId:      string;
+    tecnicoNombre:  string;
+    estado:         EstadoVisita;
+    horaSalida?:    any;
+    horaLlegada?:   any;
+    horaInicio?:    any;
+    horaTermino?:   any;
+    creadoEn:       any;
+    actualizadoEn:  any;
 }

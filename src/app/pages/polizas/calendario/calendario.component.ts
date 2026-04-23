@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
@@ -19,7 +20,7 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
   selector: 'app-calendario-polizas',
   standalone: true,
   imports: [
-    CommonModule, NavbarComponent,
+    CommonModule, FormsModule, NavbarComponent,
     ModalObservacionesComponent, ModalDocumentacionComponent,
     DialogComponent,
   ],
@@ -49,24 +50,116 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
         </div>
       </div>
 
+      <!-- Filtros de estado -->
+      <div class="filtro-tabs">
+        <button class="ftab"
+                [class.active]="filtroEstado() === 'todos'"
+                (click)="filtroEstado.set('todos')">
+          Todos
+          <span class="ftab-cnt">{{ visitas().length }}</span>
+        </button>
+        <button class="ftab"
+                [class.active]="filtroEstado() === 'pendiente'"
+                (click)="filtroEstado.set('pendiente')">
+          Pendiente
+          <span class="ftab-cnt">{{ cntEstado('pendiente') }}</span>
+        </button>
+        <button class="ftab ftab-en-camino"
+                [class.active]="filtroEstado() === 'en_camino'"
+                (click)="filtroEstado.set('en_camino')">
+          En camino
+          <span class="ftab-cnt">{{ cntEstado('en_camino') }}</span>
+        </button>
+        <button class="ftab ftab-en-sitio"
+                [class.active]="filtroEstado() === 'en_sitio'"
+                (click)="filtroEstado.set('en_sitio')">
+          En sitio
+          <span class="ftab-cnt">{{ cntEstado('en_sitio') }}</span>
+        </button>
+        <button class="ftab ftab-en-proceso"
+                [class.active]="filtroEstado() === 'en_proceso'"
+                (click)="filtroEstado.set('en_proceso')">
+          En proceso
+          <span class="ftab-cnt">{{ cntEstado('en_proceso') }}</span>
+        </button>
+        <button class="ftab ftab-obs"
+                [class.active]="filtroEstado() === 'obs_guardadas'"
+                (click)="filtroEstado.set('obs_guardadas')">
+          Obs. guardadas
+          <span class="ftab-cnt">{{ cntEstado('obs_guardadas') }}</span>
+        </button>
+        <button class="ftab ftab-completo"
+                [class.active]="filtroEstado() === 'completo'"
+                (click)="filtroEstado.set('completo')">
+          Completo
+          <span class="ftab-cnt">{{ cntEstado('completo') }}</span>
+        </button>
+      </div>
+
       @if (cargando()) {
         <div class="estado-carga">
           <span class="spinner"></span><span>Cargando sitios...</span>
         </div>
       } @else {
 
+        <!-- Banner sitio activo -->
+        @if (miSitioActivo) {
+          <div class="sitio-activo-banner">
+            <div class="sab-left">
+              <span class="sab-ico">📍</span>
+              <div>
+                <div class="sab-label">
+                  {{ esAdmin ? 'Servicio en curso' : 'Tu servicio en curso' }}
+                </div>
+                <div class="sab-nombre">{{ miSitioActivo!.sitioNombre }}</div>
+                @if (esAdmin && miSitioActivo!.tecnicoNombre) {
+                  <div class="text-muted" style="font-size:11px;margin-top:2px">
+                    Técnico: {{ miSitioActivo!.tecnicoNombre }}
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="sab-right">
+              <span class="badge" [class]="badgeClass(miSitioActivo!.estado)">
+                {{ labelEstado(miSitioActivo!.estado) }}
+              </span>
+              <ng-container
+                *ngTemplateOutlet="acciones; context:{v:miSitioActivo}" />
+            </div>
+          </div>
+        }
+
+        <!-- Tabla desktop -->
         <table class="cal-table">
           <thead>
             <tr>
               <th class="col-num">#</th>
-              <th>Sitio</th>
+              <th>
+                <div class="th-con-busqueda">
+                  Sitio
+                  <div style="position:relative;display:flex;align-items:center">
+                    <input
+                      type="text"
+                      [ngModel]="busqueda()"
+                      (ngModelChange)="busqueda.set($event)"
+                      placeholder="🔍 Buscar..."
+                      class="search-inline"
+                      (click)="$event.stopPropagation()"
+                    />
+                    @if (busqueda()) {
+                      <button class="search-inline-clear"
+                              (click)="busqueda.set('')">×</button>
+                    }
+                  </div>
+                </div>
+              </th>
               <th>Técnico</th>
               <th class="col-estado">Estado</th>
               <th class="col-acc">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @for (v of visitas(); track v.id; let i = $index) {
+            @for (v of visitasFiltradas; track v.id; let i = $index) {
               <tr [class]="'row-' + rowClass(v.estado)">
                 <td class="col-num">{{ i + 1 }}</td>
                 <td class="col-nombre">{{ v.sitioNombre }}</td>
@@ -80,17 +173,40 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
                 </td>
                 <td class="col-acc">
                   <div class="col-acc-inner">
-                    <ng-container *ngTemplateOutlet="acciones; context:{v:v}" />
+                    <ng-container
+                      *ngTemplateOutlet="acciones; context:{v:v}" />
                   </div>
+                </td>
+              </tr>
+            }
+            @if (visitasFiltradas.length === 0) {
+              <tr>
+                <td colspan="5" class="td-vacio">
+                  No hay sitios con ese filtro.
                 </td>
               </tr>
             }
           </tbody>
         </table>
 
+        <!-- Cards móvil -->
         <div class="sitios-movil">
-          @for (v of visitas(); track v.id; let i = $index) {
-            <div class="sitio-card-movil" [class]="'row-' + rowClass(v.estado)">
+          <div style="position:relative;margin-bottom:12px">
+            <input
+              type="text"
+              [ngModel]="busqueda()"
+              (ngModelChange)="busqueda.set($event)"
+              placeholder="🔍 Buscar sitio o técnico..."
+              class="search-movil"
+            />
+            @if (busqueda()) {
+              <button class="search-movil-clear"
+                      (click)="busqueda.set('')">×</button>
+            }
+          </div>
+          @for (v of visitasFiltradas; track v.id; let i = $index) {
+            <div class="sitio-card-movil"
+                 [class]="'row-' + rowClass(v.estado)">
               <div class="sitio-card-top">
                 <div>
                   <div class="sitio-card-num"># {{ i + 1 }}</div>
@@ -104,8 +220,15 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
                 </span>
               </div>
               <div class="sitio-card-acc">
-                <ng-container *ngTemplateOutlet="acciones; context:{v:v}" />
+                <ng-container
+                  *ngTemplateOutlet="acciones; context:{v:v}" />
               </div>
+            </div>
+          }
+          @if (visitasFiltradas.length === 0) {
+            <div class="estado-vacio">
+              <span style="font-size:32px">🔍</span>
+              <p>No hay sitios con ese filtro.</p>
             </div>
           }
         </div>
@@ -130,7 +253,9 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
               📍 Llegué al sitio
             </button>
           } @else {
-            <span class="badge-servicio">En servicio: {{ v.tecnicoNombre }}</span>
+            <span class="badge-servicio">
+              En servicio: {{ v.tecnicoNombre }}
+            </span>
           }
         }
 
@@ -140,7 +265,9 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
               🔧 Iniciar servicio
             </button>
           } @else {
-            <span class="badge-servicio">En servicio: {{ v.tecnicoNombre }}</span>
+            <span class="badge-servicio">
+              En servicio: {{ v.tecnicoNombre }}
+            </span>
           }
         }
 
@@ -150,7 +277,9 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
               ✏️ Llenar observaciones
             </button>
           } @else {
-            <span class="badge-servicio">En servicio: {{ v.tecnicoNombre }}</span>
+            <span class="badge-servicio">
+              En servicio: {{ v.tecnicoNombre }}
+            </span>
           }
         }
 
@@ -198,63 +327,114 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
                 title="Ver detalles"
                 (click)="verDetalles(v)">🕐</button>
         <button class="btn btn-danger btn-sm btn-icon"
-                title="Regresar a pendiente"
-                (click)="onRegresarPendiente(v)">↩</button>
+                title="Regresar estado"
+                (click)="abrirRegresar(v)">↩</button>
       }
     </ng-template>
 
     <!-- Modal detalles horario -->
     @if (visitaDetalle()) {
       <div class="modal-backdrop" (click)="visitaDetalle.set(null)">
-        <div class="modal-box modal-detalle" (click)="$event.stopPropagation()">
+        <div class="modal-box modal-detalle"
+             (click)="$event.stopPropagation()">
           <div class="modal-header">
             <span class="modal-title">
               🕐 Detalles — {{ visitaDetalle()!.sitioNombre }}
             </span>
-            <button class="modal-close" (click)="visitaDetalle.set(null)">×</button>
+            <button class="modal-close"
+                    (click)="visitaDetalle.set(null)">×</button>
           </div>
           <div class="modal-body">
             <div class="detalle-grid">
               <div class="detalle-item">
                 <span class="detalle-lbl">Técnico</span>
-                <span class="detalle-val">{{ visitaDetalle()!.tecnicoNombre || '—' }}</span>
+                <span class="detalle-val">
+                  {{ visitaDetalle()!.tecnicoNombre || '—' }}
+                </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">Estado actual</span>
-                <span class="badge" [class]="badgeClass(visitaDetalle()!.estado)">
+                <span class="badge"
+                      [class]="badgeClass(visitaDetalle()!.estado)">
                   {{ labelEstado(visitaDetalle()!.estado) }}
                 </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">🚗 Hora de salida</span>
-                <span class="detalle-val">{{ fmtFechaHora(visitaDetalle()!.horaSalida) }}</span>
+                <span class="detalle-val">
+                  {{ fmtFechaHora(visitaDetalle()!.horaSalida) }}
+                </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">📍 Hora de llegada</span>
-                <span class="detalle-val">{{ fmtFechaHora(visitaDetalle()!.horaLlegada) }}</span>
+                <span class="detalle-val">
+                  {{ fmtFechaHora(visitaDetalle()!.horaLlegada) }}
+                </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">🔧 Inicio de servicio</span>
-                <span class="detalle-val">{{ fmtFechaHora(visitaDetalle()!.horaInicio) }}</span>
+                <span class="detalle-val">
+                  {{ fmtFechaHora(visitaDetalle()!.horaInicio) }}
+                </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">✅ Hora de término</span>
-                <span class="detalle-val">{{ fmtFechaHora(visitaDetalle()!.horaTermino) }}</span>
+                <span class="detalle-val">
+                  {{ fmtFechaHora(visitaDetalle()!.horaTermino) }}
+                </span>
               </div>
               @if (visitaDetalle()!.horaSalida && visitaDetalle()!.horaTermino) {
                 <div class="detalle-item detalle-full">
                   <span class="detalle-lbl">⏱ Duración total</span>
                   <span class="detalle-val detalle-duracion">
-                    {{ calcularDuracion(visitaDetalle()!.horaSalida, visitaDetalle()!.horaTermino) }}
+                    {{ calcularDuracion(
+                        visitaDetalle()!.horaSalida,
+                        visitaDetalle()!.horaTermino) }}
                   </span>
                 </div>
               }
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="visitaDetalle.set(null)">
-              Cerrar
-            </button>
+            <button class="btn btn-secondary"
+                    (click)="visitaDetalle.set(null)">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Modal regresar estado -->
+    @if (visitaRegresar()) {
+      <div class="modal-backdrop" (click)="visitaRegresar.set(null)">
+        <div class="modal-box modal-regresar"
+             (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <span class="modal-title">↩ Regresar estado</span>
+            <button class="modal-close"
+                    (click)="visitaRegresar.set(null)">×</button>
+          </div>
+          <div class="modal-body">
+            <p style="margin-bottom:14px;color:var(--gris-osc)">
+              Selecciona a qué estado deseas regresar
+              <strong>{{ visitaRegresar()!.sitioNombre }}</strong>:
+            </p>
+            <div class="estados-lista">
+              @for (e of estadosAnteriores(visitaRegresar()!.estado);
+                    track e.valor) {
+                <button class="estado-opcion"
+                        (click)="confirmarRegresar(visitaRegresar()!, e.valor)">
+                  <span class="estado-opcion-ico">{{ e.icono }}</span>
+                  <div>
+                    <div class="estado-opcion-nombre">{{ e.label }}</div>
+                    <div class="estado-opcion-desc">{{ e.desc }}</div>
+                  </div>
+                </button>
+              }
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary"
+                    (click)="visitaRegresar.set(null)">Cancelar</button>
           </div>
         </div>
       </div>
@@ -283,16 +463,116 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
     <app-dialog />
   `,
   styles: [`
-    .cal-wrap       { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
-    .cal-head       { display: flex; align-items: center; justify-content: space-between;
-                      margin-bottom: 22px; flex-wrap: wrap; gap: 14px; }
+    .cal-wrap       { max-width: 1100px; margin: 0 auto; padding: 90px 24px 28px; }
+    .cal-head       { display: flex; align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 16px; flex-wrap: wrap; gap: 14px; }
     .cal-nav        { display: flex; align-items: center; gap: 14px; }
     .cal-nav h2     { margin-bottom: 2px; }
     .leyenda        { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .estado-carga   { display: flex; justify-content: center; align-items: center;
                       gap: 12px; padding: 60px; color: var(--gris-med); }
-    .badge-servicio { font-size: 11px; color: var(--gris-med); font-style: italic; padding: 4px 0; }
+    .estado-vacio   { display: flex; flex-direction: column; align-items: center;
+                      gap: 12px; padding: 40px; color: var(--gris-med);
+                      text-align: center; }
+    .badge-servicio { font-size: 11px; color: var(--gris-med);
+                      font-style: italic; padding: 4px 0; }
     .sitios-movil   { display: none; }
+    .td-vacio       { text-align: center; padding: 40px;
+                      color: var(--gris-med); font-style: italic; }
+
+    /* Filtros */
+    .filtro-tabs {
+      display: flex; gap: 6px;
+      margin-bottom: 16px;
+      overflow-x: auto; padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      &::-webkit-scrollbar { display: none; }
+    }
+    .ftab {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 20px;
+      border: 1px solid var(--gris-border);
+      background: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px; font-weight: 500;
+      color: var(--gris-med);
+      cursor: pointer; white-space: nowrap;
+      transition: all var(--trans); flex-shrink: 0;
+      &:hover { border-color: var(--gris-med); color: var(--gris-osc); }
+      &.active { background: var(--gris-osc); border-color: var(--gris-osc); color: #fff; }
+    }
+    .ftab-cnt {
+      background: rgba(0,0,0,.12); border-radius: 10px;
+      padding: 1px 6px; font-size: 10px; font-weight: 600; line-height: 1.4;
+    }
+    .ftab-en-camino.active  { background: #B45309; border-color: #B45309; }
+    .ftab-en-sitio.active   { background: #1D4ED8; border-color: #1D4ED8; }
+    .ftab-en-proceso.active { background: #92400E; border-color: #92400E; }
+    .ftab-obs.active        { background: #6D28D9; border-color: #6D28D9; }
+    .ftab-completo.active   { background: #065F46; border-color: #065F46; }
+
+    /* Buscador en thead */
+    .th-con-busqueda { display: flex; align-items: center; gap: 10px; }
+    .search-inline {
+      padding: 3px 22px 3px 8px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif; font-size: 11px;
+      background: rgba(255,255,255,.12); color: rgba(255,255,255,.85);
+      outline: none; width: 120px; transition: all var(--trans);
+      &::placeholder { color: rgba(255,255,255,.4); }
+      &:focus {
+        background: rgba(255,255,255,.2);
+        border-color: rgba(255,255,255,.5);
+        width: 170px;
+      }
+    }
+    .search-inline-clear {
+      background: transparent; border: none;
+      color: rgba(255,255,255,.5); cursor: pointer;
+      font-size: 14px; padding: 0; margin-left: -20px; line-height: 1;
+      &:hover { color: #fff; }
+    }
+    .search-movil {
+      width: 100%; padding: 8px 32px 8px 12px;
+      border: 1px solid var(--gris-clar);
+      border-radius: var(--radius-md);
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      outline: none; background: #fff;
+      &:focus { border-color: var(--azul-clar); }
+    }
+    .search-movil-clear {
+      position: absolute; right: 10px; top: 50%;
+      transform: translateY(-50%);
+      background: transparent; border: none;
+      font-size: 16px; color: var(--gris-med);
+      cursor: pointer; padding: 0; line-height: 1;
+      &:hover { color: var(--gris-osc); }
+    }
+
+    /* Banner sitio activo */
+    .sitio-activo-banner {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 12px;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, var(--azul-bg), #fff);
+      border: 2px solid var(--azul-clar);
+      border-radius: var(--radius-lg);
+      margin-bottom: 16px; flex-wrap: wrap;
+      animation: slideUp 200ms ease;
+    }
+    .sab-left   { display: flex; align-items: center; gap: 12px; }
+    .sab-ico    { font-size: 24px; }
+    .sab-label  {
+      font-size: 10px; font-weight: 600; color: var(--azul-med);
+      text-transform: uppercase; letter-spacing: .08em;
+    }
+    .sab-nombre { font-size: 15px; font-weight: 600; color: var(--azul-osc); }
+    .sab-right  { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    /* Modal detalles */
     .modal-detalle  { max-width: 420px; }
     .detalle-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .detalle-full   { grid-column: 1 / -1; }
@@ -304,11 +584,29 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
     .detalle-lbl      { font-size: 11px; color: var(--gris-med); font-weight: 500; }
     .detalle-val      { font-size: 13px; font-weight: 600; color: var(--gris-osc); }
     .detalle-duracion { color: var(--azul-clar); font-size: 16px; }
+
+    /* Modal regresar */
+    .modal-regresar   { max-width: 400px; }
+    .estados-lista    { display: flex; flex-direction: column; gap: 8px; }
+    .estado-opcion    {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; background: var(--gris-bg);
+      border: 1px solid var(--gris-border);
+      border-radius: var(--radius-md);
+      cursor: pointer; text-align: left; width: 100%;
+      font-family: 'DM Sans', sans-serif; transition: all var(--trans);
+      &:hover { background: var(--azul-bg); border-color: var(--azul-clar); }
+    }
+    .estado-opcion-ico    { font-size: 20px; flex-shrink: 0; }
+    .estado-opcion-nombre { font-size: 13px; font-weight: 600; color: var(--gris-osc); }
+    .estado-opcion-desc   { font-size: 11px; color: var(--gris-med); margin-top: 2px; }
+
     @media (max-width: 768px) {
       .cal-table    { display: none; }
       .sitios-movil { display: block; }
       .cal-wrap     { padding: 76px 12px 24px; }
       .detalle-grid { grid-template-columns: 1fr; }
+      .sitio-activo-banner { flex-direction: column; align-items: flex-start; }
     }
   `],
 })
@@ -322,15 +620,51 @@ export class CalendarioPolizasComponent implements OnInit, OnDestroy {
   private dialog      = inject(DialogService);
   auth                = inject(AuthService);
 
-  anio          = signal(0);
-  mes           = signal(0);
-  cargando      = signal(true);
-  visitas       = signal<Visita[]>([]);
-  visitaModal   = signal<Visita | null>(null);
-  modalActivo   = signal<'obs' | 'doc' | null>(null);
-  visitaDetalle = signal<Visita | null>(null);
+  anio           = signal(0);
+  mes            = signal(0);
+  cargando       = signal(true);
+  visitas        = signal<Visita[]>([]);
+  busqueda       = signal('');
+  filtroEstado   = signal<EstadoVisita | 'todos'>('todos');
+  visitaModal    = signal<Visita | null>(null);
+  modalActivo    = signal<'obs' | 'doc' | null>(null);
+  visitaDetalle  = signal<Visita | null>(null);
+  visitaRegresar = signal<Visita | null>(null);
 
   get esAdmin(): boolean { return this.auth.esAdmin; }
+
+  get visitasFiltradas(): Visita[] {
+    let lista = this.visitas();
+    if (this.filtroEstado() !== 'todos') {
+      lista = lista.filter(v => v.estado === this.filtroEstado());
+    }
+    const q = this.busqueda().toLowerCase().trim();
+    if (q) {
+      lista = lista.filter(v =>
+        v.sitioNombre.toLowerCase().includes(q) ||
+        (v.tecnicoNombre ?? '').toLowerCase().includes(q)
+      );
+    }
+    return lista;
+  }
+
+  get miSitioActivo(): Visita | null {
+    if (this.esAdmin) {
+      return this.visitas().find(v =>
+        ['en_camino','en_sitio','en_proceso','obs_guardadas'].includes(v.estado)
+      ) ?? null;
+    }
+    const uid = this.auth.usuarioActual()?.uid;
+    if (!uid) return null;
+    return this.visitas().find(v =>
+      v.tecnicoId === uid &&
+      ['en_camino','en_sitio','en_proceso','obs_guardadas'].includes(v.estado)
+    ) ?? null;
+  }
+
+  cntEstado(estado: EstadoVisita): number {
+    return this.visitas().filter(v => v.estado === estado).length;
+  }
 
   esMiVisita(v: Visita): boolean {
     const uid = this.auth.usuarioActual()?.uid;
@@ -377,7 +711,7 @@ export class CalendarioPolizasComponent implements OnInit, OnDestroy {
   }
 
   grupo(): number {
-    const mapa: Record<number, number> = {
+    const mapa: Record<number,number> = {
       1:1,2:2,3:3,4:4,5:1,6:2,7:3,8:4,9:1,10:2,11:3,12:4
     };
     return mapa[this.mes()] ?? 1;
@@ -406,7 +740,9 @@ export class CalendarioPolizasComponent implements OnInit, OnDestroy {
     if (!ok) return;
     const usuario = this.auth.usuarioActual();
     if (usuario) {
-      await this.visitasSvc.actualizarTecnico(v.id!, usuario.uid, usuario.nombre);
+      await this.visitasSvc.actualizarTecnico(
+        v.id!, usuario.uid, usuario.nombre
+      );
     }
     await this.visitasSvc.marcarEnCamino(v.id!);
   }
@@ -443,23 +779,53 @@ export class CalendarioPolizasComponent implements OnInit, OnDestroy {
     await this.visitasSvc.marcarRealizado(v.id!);
   }
 
-  async onRegresarPendiente(v: Visita): Promise<void> {
+  abrirRegresar(v: Visita):  void { this.visitaRegresar.set(v); }
+  abrirObs(v: Visita):       void { this.visitaModal.set(v); this.modalActivo.set('obs'); }
+  abrirDoc(v: Visita):       void { this.visitaModal.set(v); this.modalActivo.set('doc'); }
+  verDetalles(v: Visita):    void { this.visitaDetalle.set(v); }
+
+  estadosAnteriores(estadoActual: EstadoVisita): {
+    valor: EstadoVisita; label: string; icono: string; desc: string;
+  }[] {
+    const todos = [
+      { valor: 'pendiente'     as EstadoVisita, label: 'Pendiente',
+        icono: '⏳', desc: 'Borra técnico, horarios, observaciones y documentación' },
+      { valor: 'en_camino'     as EstadoVisita, label: 'En camino',
+        icono: '🚗', desc: 'Conserva técnico. Borra observaciones y documentación' },
+      { valor: 'en_sitio'      as EstadoVisita, label: 'En sitio',
+        icono: '📍', desc: 'Conserva técnico. Borra observaciones y documentación' },
+      { valor: 'en_proceso'    as EstadoVisita, label: 'En proceso',
+        icono: '🔧', desc: 'Conserva técnico. Borra observaciones y documentación' },
+      { valor: 'obs_guardadas' as EstadoVisita, label: 'Observaciones guardadas',
+        icono: '📋', desc: 'Conserva técnico y observaciones. Borra solo documentación' },
+    ];
+    const orden: EstadoVisita[] = [
+      'pendiente','en_camino','en_sitio',
+      'en_proceso','obs_guardadas','completo'
+    ];
+    const idxActual = orden.indexOf(estadoActual);
+    return todos.filter(e => orden.indexOf(e.valor) < idxActual);
+  }
+
+  async confirmarRegresar(v: Visita, estado: EstadoVisita): Promise<void> {
+    this.visitaRegresar.set(null);
+    const estadoLabel = this.labelEstado(estado);
     const ok = await this.dialog.confirm({
-      tipo: 'danger', icono: '⚠',
-      titulo:    'Regresar a pendiente',
-      mensaje:   `¿Regresar "${v.sitioNombre}" a pendiente?`,
-      detalle:   'Se borrarán observaciones, documentación y todos los horarios. Esta acción no se puede deshacer.',
+      tipo:      estado === 'pendiente' ? 'danger' : 'warn',
+      icono:     '↩',
+      titulo:    `Regresar a ${estadoLabel}`,
+      mensaje:   `¿Confirmas regresar "${v.sitioNombre}" a ${estadoLabel}?`,
+      detalle:   estado === 'pendiente'
+        ? 'Se borrará el técnico, horarios, observaciones y documentación.'
+        : estado === 'obs_guardadas'
+          ? 'Se borrará la documentación. Técnico y observaciones se conservan.'
+          : 'Se borrarán observaciones y documentación. El técnico se conserva.',
       btnOk:     'Sí, regresar',
       btnCancel: 'Cancelar',
     });
     if (!ok) return;
-    await this.visitasSvc.reabrirObservaciones(v.id!);
-    await this.visitasSvc.regresarPendiente(v.id!);
+    await this.visitasSvc.regresarAEstado(v.id!, estado);
   }
-
-  abrirObs(v: Visita):    void { this.visitaModal.set(v); this.modalActivo.set('obs'); }
-  abrirDoc(v: Visita):    void { this.visitaModal.set(v); this.modalActivo.set('doc'); }
-  verDetalles(v: Visita): void { this.visitaDetalle.set(v); }
 
   async abrirTabla(v: Visita): Promise<void> {
     const obs = await this.obsSvc.getObservaciones(v.id!);
@@ -521,7 +887,7 @@ export class CalendarioPolizasComponent implements OnInit, OnDestroy {
   }
 
   rowClass(e: EstadoVisita): string {
-    const m: Record<EstadoVisita, string> = {
+    const m: Record<EstadoVisita,string> = {
       pendiente:'', en_camino:'en-camino', en_sitio:'en-sitio',
       en_proceso:'en-proceso', obs_guardadas:'obs', completo:'completo'
     };
@@ -529,7 +895,7 @@ export class CalendarioPolizasComponent implements OnInit, OnDestroy {
   }
 
   badgeClass(e: EstadoVisita): string {
-    const m: Record<EstadoVisita, string> = {
+    const m: Record<EstadoVisita,string> = {
       pendiente:'badge-pendiente', en_camino:'badge-en-camino',
       en_sitio:'badge-en-sitio', en_proceso:'badge-en-proceso',
       obs_guardadas:'badge-obs', completo:'badge-completo'
@@ -538,7 +904,7 @@ export class CalendarioPolizasComponent implements OnInit, OnDestroy {
   }
 
   labelEstado(e: EstadoVisita): string {
-    const m: Record<EstadoVisita, string> = {
+    const m: Record<EstadoVisita,string> = {
       pendiente:'Pendiente', en_camino:'En camino', en_sitio:'En sitio',
       en_proceso:'En proceso', obs_guardadas:'Observaciones guardadas',
       completo:'Completo'

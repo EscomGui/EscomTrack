@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
 import { Auth, onAuthStateChanged } from '@angular/fire/auth';
 import { AuthService } from './core/services/auth.service';
 import { DialogComponent } from './shared/components/dialog/dialog.component';
@@ -18,16 +19,14 @@ import { DialogComponent } from './shared/components/dialog/dialog.component';
         </div>
       </div>
     } @else {
-      <div class="app-shell">
-        <router-outlet />
+      <router-outlet />
+      @if (mostrarFooter) {
         <footer class="app-footer">
           © {{ anio }} RAGUI · ESCOM TRACK · Todos los derechos reservados
         </footer>
-      </div>
-
-      <!-- Diálogo global — siempre visible -->
-      <app-dialog />
+      }
     }
+    <app-dialog />
   `,
   styles: [`
     .app-loading {
@@ -56,26 +55,20 @@ import { DialogComponent } from './shared/components/dialog/dialog.component';
       border-radius: 50%;
       animation: spin .7s linear infinite;
     }
-    .app-shell {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding-top: var(--navbar-h);
-    }
     .app-footer {
       text-align: center;
       padding: 16px;
       font-size: 11px;
       color: var(--gris-med);
       border-top: 1px solid var(--gris-border);
-      margin-top: auto;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   `],
 })
 export class AppComponent implements OnInit {
-  cargando = true;
-  anio     = new Date().getFullYear();
+  cargando     = true;
+  mostrarFooter = false;
+  anio         = new Date().getFullYear();
 
   private fireAuth = inject(Auth);
   private auth     = inject(AuthService);
@@ -85,6 +78,12 @@ export class AppComponent implements OnInit {
     onAuthStateChanged(this.fireAuth, async (user) => {
       if (user) await this.esperarPerfil();
       this.cargando = false;
+    });
+
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe((e: any) => {
+      this.mostrarFooter = !e.url.includes('/login');
     });
   }
 
