@@ -1211,3 +1211,42 @@ body.theme-white {
   animation: slideUp 200ms ease;
   white-space: nowrap;
 }
+.chip-superadmin {
+  font-size: 10px; padding: 1px 8px; border-radius: 20px;
+  background: rgba(234,179,8,.15); color: #FCD34D;
+  border: 1px solid rgba(234,179,8,.3);
+}
+
+// Nota en modo oscuro
+.nota-toggle-btn {
+  border-color: #2d2d3f !important;
+  color: #4a9eff !important;
+  &:hover { background: rgba(74,158,255,.08) !important; }
+}
+.nota-textarea {
+  background: rgba(74,158,255,.06) !important;
+  border-color: #4a9eff !important;
+  color: #e0e0f0 !important;
+}
+.obs-nota-bloqueada {
+  background: rgba(74,158,255,.08) !important;
+  border-color: #4a9eff !important;
+  color: #8b8ba7 !important;
+}
+// Documentación modo oscuro
+.slot-box-sm {
+  background: #16213e !important;
+  border-color: #2d2d3f !important;
+  &.tiene-foto { border-color: #4a9eff !important; }
+}
+.add-foto-btn {
+  background: rgba(74,158,255,.06) !important;
+  border-color: #4a9eff !important;
+  color: #4a9eff !important;
+}
+.completitud-bar {
+  background: #16213e !important;
+  border-color: #2d2d3f !important;
+}
+.completitud-track { background: #2d2d3f !important; }
+.sin-fotos-label   { color: #8b8ba7 !important; }

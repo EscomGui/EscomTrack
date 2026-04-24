@@ -1,4 +1,7 @@
-import { Component, inject, Input, Output, EventEmitter, signal, OnInit } from '@angular/core';
+import {
+  Component, inject, Input, Output,
+  EventEmitter, signal, OnInit
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -17,7 +20,10 @@ import { Visita } from '../../../core/models/visita.model';
 interface ObsLocal {
   descripcion: string;
   prioridad:   Prioridad | '';
+  nota:        string;
   errorPri:    boolean;
+  errorNota:   boolean;
+  notaActiva:  boolean;
 }
 
 interface TecnicoOpcion {
@@ -70,8 +76,17 @@ interface TecnicoOpcion {
             } @else {
               @for (obs of guardadas()?.observaciones; track obs.numero) {
                 <div class="obs-bloqueada" [class]="obs.prioridad">
-                  <span class="obs-bl-num">{{ obs.numero }}</span>
-                  <span class="obs-bl-txt">{{ obs.descripcion }}</span>
+                  <div style="display:flex;align-items:flex-start;gap:8px;flex:1">
+                    <span class="obs-bl-num">{{ obs.numero }}</span>
+                    <div style="flex:1">
+                      <span class="obs-bl-txt">{{ obs.descripcion }}</span>
+                      @if (obs.nota) {
+                        <div class="obs-nota-bloqueada">
+                          📝 {{ obs.nota }}
+                        </div>
+                      }
+                    </div>
+                  </div>
                   <span class="chip" [class]="'chip-' + obs.prioridad">
                     {{ labelPri(obs.prioridad) }}
                   </span>
@@ -79,11 +94,17 @@ interface TecnicoOpcion {
               }
             }
 
-            @if (esAdmin) {
+            @if (esAdmin && !esSuperAdmin) {
               <div class="banner banner-warn mt-3">
                 <span>⚠</span>
                 Si reabres las observaciones, la documentación
                 se borrará automáticamente.
+              </div>
+            }
+            @if (esSuperAdmin) {
+              <div class="banner banner-info mt-3">
+                <span>⭐</span>
+                Como Super Admin puedes reabrir sin perder información.
               </div>
             }
 
@@ -132,6 +153,7 @@ interface TecnicoOpcion {
                 <div class="obs-card"
                      [class]="obs.prioridad"
                      [class.error]="obs.errorPri">
+
                   <div class="obs-row">
                     <div class="form-group" style="flex:1;margin-bottom:0">
                       <textarea
@@ -161,11 +183,48 @@ interface TecnicoOpcion {
                               (click)="quitar(i)">×</button>
                     }
                   </div>
+
                   @if (obs.errorPri) {
                     <div class="form-error mt-2">
                       Selecciona una prioridad.
                     </div>
                   }
+
+                  <!-- Campo nota opcional -->
+                  <div class="nota-section">
+                    @if (!obs.notaActiva) {
+                      <button class="nota-toggle-btn"
+                              (click)="activarNota(i)">
+                        + Agregar nota (opcional)
+                      </button>
+                    } @else {
+                      <div class="nota-wrap">
+                        <label class="nota-label">
+                          📝 Nota adicional
+                          <span class="nota-hint">
+                            (mínimo 10 palabras si se escribe)
+                          </span>
+                        </label>
+                        <textarea
+                          [(ngModel)]="obs.nota"
+                          (input)="onNotaInput(i)"
+                          placeholder="Describe con detalle la situación detectada..."
+                          rows="2"
+                          class="nota-textarea">
+                        </textarea>
+                        @if (obs.errorNota) {
+                          <div class="form-error">
+                            La nota debe tener al menos 10 palabras.
+                          </div>
+                        }
+                        <button class="nota-quitar-btn"
+                                (click)="quitarNota(i)">
+                          × Quitar nota
+                        </button>
+                      </div>
+                    }
+                  </div>
+
                 </div>
               }
 
@@ -214,7 +273,56 @@ interface TecnicoOpcion {
 
     <app-dialog />
   `,
-  styles: [`.mb-3 { margin-bottom: 12px; }`],
+  styles: [`
+    .mb-3             { margin-bottom: 12px; }
+    .nota-section     { margin-top: 8px; }
+    .nota-toggle-btn  {
+      background: transparent;
+      border: 1px dashed var(--gris-border);
+      border-radius: var(--radius-sm);
+      color: var(--azul-clar);
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all var(--trans);
+      &:hover {
+        background: var(--azul-bg);
+        border-color: var(--azul-clar);
+      }
+    }
+    .nota-wrap        { display: flex; flex-direction: column; gap: 4px; }
+    .nota-label       {
+      font-size: 11px; font-weight: 600;
+      color: var(--gris-med); text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .nota-hint        {
+      font-weight: 400; text-transform: none;
+      font-size: 10px; color: var(--gris-med);
+    }
+    .nota-textarea    {
+      border-color: var(--azul-clar) !important;
+      background: var(--azul-bg) !important;
+      font-size: 13px !important;
+    }
+    .nota-quitar-btn  {
+      background: transparent; border: none;
+      color: var(--gris-med); font-size: 11px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; padding: 0; text-align: left;
+      &:hover { color: #DC2626; }
+    }
+    .obs-nota-bloqueada {
+      margin-top: 6px;
+      padding: 6px 10px;
+      background: var(--azul-bg);
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--azul-clar);
+      font-size: 12px;
+      color: var(--gris-med);
+    }
+  `],
 })
 export class ModalObservacionesComponent implements OnInit {
   @Input()  visita!: Visita;
@@ -235,7 +343,8 @@ export class ModalObservacionesComponent implements OnInit {
   cargandoTecnicos = signal(true);
   tecnicos         = signal<TecnicoOpcion[]>([]);
   obsList          = signal<ObsLocal[]>([
-    { descripcion: '', prioridad: '', errorPri: false }
+    { descripcion: '', prioridad: '', nota: '',
+      errorPri: false, errorNota: false, notaActiva: false }
   ]);
 
   sinObservaciones    = false;
@@ -243,7 +352,8 @@ export class ModalObservacionesComponent implements OnInit {
   tecnicoNombre       = '';
   fecha               = new Date().toISOString().split('T')[0];
 
-  get esAdmin(): boolean { return this.auth.esAdmin; }
+  get esAdmin():      boolean { return this.auth.esAdmin; }
+  get esSuperAdmin(): boolean { return this.auth.esSuperAdmin; }
 
   async ngOnInit(): Promise<void> {
     await this.cargarTecnicos();
@@ -307,6 +417,12 @@ export class ModalObservacionesComponent implements OnInit {
     this.errorGlobal.set('');
   }
 
+  onNotaInput(i: number): void {
+    const l = [...this.obsList()];
+    l[i].errorNota = false;
+    this.obsList.set(l);
+  }
+
   setPri(i: number, p: Prioridad): void {
     const l = [...this.obsList()];
     l[i].prioridad = p;
@@ -316,12 +432,32 @@ export class ModalObservacionesComponent implements OnInit {
 
   agregar(): void {
     this.obsList.update(l => [
-      ...l, { descripcion: '', prioridad: '', errorPri: false }
+      ...l,
+      { descripcion: '', prioridad: '', nota: '',
+        errorPri: false, errorNota: false, notaActiva: false }
     ]);
   }
 
   quitar(i: number): void {
     this.obsList.update(l => l.filter((_, idx) => idx !== i));
+  }
+
+  activarNota(i: number): void {
+    const l = [...this.obsList()];
+    l[i].notaActiva = true;
+    this.obsList.set(l);
+  }
+
+  quitarNota(i: number): void {
+    const l = [...this.obsList()];
+    l[i].nota       = '';
+    l[i].notaActiva = false;
+    l[i].errorNota  = false;
+    this.obsList.set(l);
+  }
+
+  private contarPalabras(texto: string): number {
+    return texto.trim().split(/\s+/).filter(p => p.length > 0).length;
   }
 
   private cargarEnFormulario(obs: ObservacionesGuardadas): void {
@@ -333,7 +469,10 @@ export class ModalObservacionesComponent implements OnInit {
       this.obsList.set(obs.observaciones.map(o => ({
         descripcion: o.descripcion,
         prioridad:   o.prioridad,
+        nota:        o.nota ?? '',
         errorPri:    false,
+        errorNota:   false,
+        notaActiva:  !!(o.nota && o.nota.trim()),
       })));
     }
   }
@@ -358,12 +497,29 @@ export class ModalObservacionesComponent implements OnInit {
       const desc = obs.descripcion.trim();
       if (!desc) return obs;
       hayAlguna = true;
+
+      let obsError = { ...obs };
+
+      // Validar prioridad
       if (!obs.prioridad) {
         hayError = true;
-        return { ...obs, errorPri: true };
+        obsError = { ...obsError, errorPri: true };
       }
-      validas.push(obs);
-      return obs;
+
+      // Validar nota si está activa y tiene texto
+      if (obs.notaActiva && obs.nota.trim()) {
+        const palabras = this.contarPalabras(obs.nota);
+        if (palabras < 10) {
+          hayError = true;
+          obsError = { ...obsError, errorNota: true };
+        }
+      }
+
+      if (!obsError.errorPri && !obsError.errorNota) {
+        validas.push(obs);
+      }
+
+      return obsError;
     });
 
     this.obsList.set(actualizada);
@@ -381,6 +537,9 @@ export class ModalObservacionesComponent implements OnInit {
       numero:      idx + 1,
       descripcion: o.descripcion.trim(),
       prioridad:   o.prioridad as Prioridad,
+      ...(o.notaActiva && o.nota.trim()
+        ? { nota: o.nota.trim() }
+        : {}),
     }));
 
     await this.guardarFinal(false, observaciones);
@@ -411,18 +570,21 @@ export class ModalObservacionesComponent implements OnInit {
   }
 
   async onReabrir(): Promise<void> {
+    const esSA = this.esSuperAdmin;
     const ok = await this.dialog.confirm({
       tipo: 'danger', icono: '🔓',
       titulo:    'Reabrir observaciones',
       mensaje:   '¿Confirmas reabrir las observaciones?',
-      detalle:   'La documentación de este sitio se borrará automáticamente.',
+      detalle:   esSA
+        ? 'Las observaciones se conservarán. Solo cambia el estado.'
+        : 'La documentación de este sitio se borrará automáticamente.',
       btnOk:     'Sí, reabrir',
       btnCancel: 'Cancelar',
     });
     if (!ok) return;
     this.guardando.set(true);
     try {
-      await this.visitasSvc.reabrirObservaciones(this.visita.id!);
+      await this.visitasSvc.reabrirObservaciones(this.visita.id!, esSA);
       this.reabierto.emit();
     } finally {
       this.guardando.set(false);

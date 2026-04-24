@@ -9,14 +9,11 @@ export const authGuard: CanActivateFn = () => {
   const router   = inject(Router);
 
   return new Promise(resolve => {
-    // Espera el primer estado de Firebase Auth
     const unsub = fireAuth.onAuthStateChanged(user => {
-      unsub(); // se desuscribe inmediatamente después del primer evento
+      unsub();
       if (user && auth.usuarioActual()) {
         resolve(true);
       } else if (user && !auth.usuarioActual()) {
-        // Firebase tiene sesión pero el perfil aún no cargó
-        // Esperamos un poco más
         const interval = setInterval(() => {
           if (auth.usuarioActual()) {
             clearInterval(interval);
@@ -39,6 +36,14 @@ export const adminGuard: CanActivateFn = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
   if (auth.esAdmin) return true;
+  router.navigate(['/dashboard']);
+  return false;
+};
+
+export const superAdminGuard: CanActivateFn = () => {
+  const auth   = inject(AuthService);
+  const router = inject(Router);
+  if (auth.esSuperAdmin) return true;
   router.navigate(['/dashboard']);
   return false;
 };

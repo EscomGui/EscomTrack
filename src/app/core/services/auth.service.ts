@@ -1,10 +1,13 @@
 import { Injectable, inject, signal } from '@angular/core';
 import {
   Auth, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged, User,  
-  browserLocalPersistence, setPersistence
+  signOut, onAuthStateChanged, User,
+  browserLocalPersistence, setPersistence,
+  updatePassword
 } from '@angular/fire/auth';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import {
+  Firestore, doc, getDoc, updateDoc
+} from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { Usuario } from '../models/usuario.model';
 
@@ -17,57 +20,46 @@ export class AuthService {
   usuarioActual = signal<Usuario | null>(null);
   cargando      = signal<boolean>(true);
 
-  // constructor() {
-  //   onAuthStateChanged(this.auth, async (fireUser: User | null) => {
-  //     if (fireUser) {
-  //       const u = await this.cargarPerfil(fireUser.uid);
-  //       this.usuarioActual.set(u);
-  //       this.verificarSesionExpirada();
-  //     } else {
-  //       this.usuarioActual.set(null);
-  //     }
-  //     this.cargando.set(false);
-  //   });
-  // }
-
-  // En el constructor, configura la persistencia al iniciar
-constructor() {
-  // Configura persistencia local ANTES de escuchar el estado
-  setPersistence(this.auth, browserLocalPersistence)
-    .then(() => {
-      onAuthStateChanged(this.auth, async (fireUser: User | null) => {
-        if (fireUser) {
-          const u = await this.cargarPerfil(fireUser.uid);
-          this.usuarioActual.set(u);
-          this.verificarSesionExpirada();
-        } else {
-          this.usuarioActual.set(null);
-        }
-        this.cargando.set(false);
+  constructor() {
+    setPersistence(this.auth, browserLocalPersistence)
+      .catch(() => {})
+      .finally(() => {
+        onAuthStateChanged(this.auth, async (fireUser: User | null) => {
+          if (fireUser) {
+            const u = await this.cargarPerfil(fireUser.uid);
+            this.usuarioActual.set(u);
+            this.verificarSesionExpirada();
+          } else {
+            this.usuarioActual.set(null);
+          }
+          this.cargando.set(false);
+        });
       });
-    })
-    .catch(() => {
-      // Si falla setPersistence, igual escuchar el estado
-      onAuthStateChanged(this.auth, async (fireUser: User | null) => {
-        if (fireUser) {
-          const u = await this.cargarPerfil(fireUser.uid);
-          this.usuarioActual.set(u);
-          this.verificarSesionExpirada();
-        } else {
-          this.usuarioActual.set(null);
-        }
-        this.cargando.set(false);
-      });
-    });
-}
+  }
 
   async login(correo: string, password: string): Promise<void> {
-    const cred = await signInWithEmailAndPassword(this.auth, correo, password);
-    const u    = await this.cargarPerfil(cred.user.uid);
+    const cred = await signInWithEmailAndPassword(
+      this.auth, correo, password
+    );
+    const u = await this.cargarPerfil(cred.user.uid);
     if (!u || !u.activo) {
       await signOut(this.auth);
       throw new Error('Usuario inactivo o sin perfil.');
     }
+
+    // Si el superadmin asignó una nueva contraseña — actualizarla ahora
+    if ((u as any).nuevaPassword) {
+      try {
+        await updatePassword(cred.user, (u as any).nuevaPassword);
+        // Borra la contraseña temporal de Firestore
+        await updateDoc(doc(this.fs, `usuarios/${cred.user.uid}`), {
+          nuevaPassword: null
+        });
+      } catch (e) {
+        console.warn('No se pudo actualizar la contraseña:', e);
+      }
+    }
+
     this.usuarioActual.set(u);
     localStorage.setItem('login_time', Date.now().toString());
     this.router.navigate(['/dashboard']);
@@ -97,6 +89,25 @@ constructor() {
     }
   }
 
-  get esAdmin():   boolean { return this.usuarioActual()?.rol === 'admin'; }
-  get esTecnico(): boolean { return this.usuarioActual()?.rol === 'tecnico'; }
+  // ── Getters de rol ────────────────────────────────────────────────────────
+  get esSuperAdmin(): boolean {
+    return this.usuarioActual()?.rol === 'superadmin';
+  }
+
+  get esAdmin(): boolean {
+    return this.usuarioActual()?.rol === 'admin' ||
+           this.usuarioActual()?.rol === 'superadmin';
+  }
+
+  get esSoloAdmin(): boolean {
+    return this.usuarioActual()?.rol === 'admin';
+  }
+
+  get esTecnico(): boolean {
+    return this.usuarioActual()?.rol === 'tecnico';
+  }
+
+  get rolActual(): 'superadmin' | 'admin' | 'tecnico' | null {
+    return this.usuarioActual()?.rol ?? null;
+  }
 }

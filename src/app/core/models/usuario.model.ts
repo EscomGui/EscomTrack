@@ -1,11 +1,9 @@
-export type Rol = 'admin' | 'tecnico';
-
 export interface Usuario {
-    uid: string;
-    nombre: string;
-    correo: string;
-    rol: Rol;
-    activo: boolean;
-    creadoEn: Date;
-    actualizadoEn?: Date;
+    uid:         string;
+    nombre:      string;
+    correo:      string;
+    rol:         'superadmin' | 'admin' | 'tecnico';
+    activo:      boolean;
+    creadoEn?:   any;
+    actualizadoEn?: any;
 }

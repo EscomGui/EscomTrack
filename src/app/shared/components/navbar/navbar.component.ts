@@ -47,10 +47,12 @@ import { AuthService } from '../../../core/services/auth.service';
 
         <div class="user-info">
           <span class="user-name">{{ auth.usuarioActual()?.nombre }}</span>
-          <span class="user-rol"
-                [class]="auth.esAdmin ? 'chip-admin' : 'chip-tec'">
-            {{ auth.esAdmin ? 'Admin' : 'Técnico' }}
-          </span>
+            <span class="user-rol"
+                  [class]="auth.esSuperAdmin ? 'chip-superadmin' :
+                          auth.esSoloAdmin  ? 'chip-admin' : 'chip-tec'">
+              {{ auth.esSuperAdmin ? '⭐ Super Administrador' :
+                auth.esSoloAdmin  ? 'Administrador' : 'Técnico' }}
+            </span>
         </div>
 
         <button class="logout-btn desktop-only" (click)="auth.logout()">
@@ -75,8 +77,10 @@ import { AuthService } from '../../../core/services/auth.service';
         <div>
           <div class="menu-user-nombre">{{ auth.usuarioActual()?.nombre }}</div>
           <span class="user-rol"
-                [class]="auth.esAdmin ? 'chip-admin' : 'chip-tec'">
-            {{ auth.esAdmin ? 'Administrador' : 'Técnico' }}
+                [class]="auth.esSuperAdmin ? 'chip-superadmin' :
+                        auth.esSoloAdmin  ? 'chip-admin' : 'chip-tec'">
+            {{ auth.esSuperAdmin ? '⭐ Super Admin' :
+              auth.esSoloAdmin  ? 'Admin' : 'Técnico' }}
           </span>
         </div>
       </div>

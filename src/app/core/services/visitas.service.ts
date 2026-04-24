@@ -44,6 +44,7 @@ export class VisitasService {
         horaLlegada:   null,
         horaInicio:    null,
         horaTermino:   null,
+        esCompletadoDirecto: false,
         creadoEn:      Timestamp.now(),
         actualizadoEn: Timestamp.now(),
       });
@@ -121,89 +122,105 @@ export class VisitasService {
     });
   }
 
+  // ── Super Admin — marcar completo directo sin flujo ───────────────────────
+  async marcarCompletoDirecto(
+    visitaId: string,
+    tecnicoNombre: string
+  ): Promise<void> {
+    await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
+      estado:              'completo',
+      tecnicoId:           '',
+      tecnicoNombre,
+      esCompletadoDirecto: true,
+      actualizadoEn:       Timestamp.now(),
+    });
+  }
+
   // ── Regresar a estado específico ──────────────────────────────────────────
   async regresarAEstado(
     visitaId: string,
-    estado: EstadoVisita
+    estado: EstadoVisita,
+    esSuperAdmin: boolean = false
   ): Promise<void> {
     const cambios: any = {
       estado,
       actualizadoEn: Timestamp.now(),
     };
 
-    // Solo si regresa a pendiente se borra el técnico y horarios
     if (estado === 'pendiente') {
-      cambios.tecnicoId     = '';
-      cambios.tecnicoNombre = '';
-      cambios.horaSalida    = null;
-      cambios.horaLlegada   = null;
-      cambios.horaInicio    = null;
-      cambios.horaTermino   = null;
+      cambios.tecnicoId            = '';
+      cambios.tecnicoNombre        = '';
+      cambios.horaSalida           = null;
+      cambios.horaLlegada          = null;
+      cambios.horaInicio           = null;
+      cambios.horaTermino          = null;
+      cambios.esCompletadoDirecto  = false;
     }
 
-    // Si regresa a en_proceso o antes — borrar obs y doc
-    if (['pendiente','en_camino','en_sitio','en_proceso'].includes(estado)) {
-      await this.borrarDocumentacion(visitaId);
-      try {
-        await deleteDoc(doc(this.fs, `observaciones/${visitaId}`));
-      } catch {}
+    if (!esSuperAdmin) {
+      // Admin — hard delete según estado destino
+      if (['pendiente','en_camino','en_sitio','en_proceso'].includes(estado)) {
+        await this.borrarDocumentacion(visitaId);
+        try { await deleteDoc(doc(this.fs, `observaciones/${visitaId}`)); } catch {}
+      }
+      if (estado === 'obs_guardadas') {
+        await this.borrarDocumentacion(visitaId);
+      }
     }
-
-    // Si regresa a obs_guardadas — solo borrar documentación
-    if (estado === 'obs_guardadas') {
-      await this.borrarDocumentacion(visitaId);
-    }
+    // SuperAdmin — solo cambia estado, conserva todo
 
     await updateDoc(doc(this.fs, `visitas/${visitaId}`), cambios);
   }
 
   // ── Reabrir ───────────────────────────────────────────────────────────────
-  async reabrirObservaciones(visitaId: string): Promise<void> {
-    await this.borrarDocumentacion(visitaId);
+  async reabrirObservaciones(
+    visitaId: string,
+    conservar: boolean = false
+  ): Promise<void> {
+    if (!conservar) {
+      await this.borrarDocumentacion(visitaId);
+      try { await deleteDoc(doc(this.fs, `observaciones/${visitaId}`)); } catch {}
+    }
     await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
-      estado:            'en_proceso',
-      fechaObsGuardadas: null,
-      fechaDocGuardada:  null,
-      fechaCompleto:     null,
-      actualizadoEn:     Timestamp.now(),
+      estado:              'en_proceso',
+      esCompletadoDirecto: false,
+      actualizadoEn:       Timestamp.now(),
     });
-    try {
-      await deleteDoc(doc(this.fs, `observaciones/${visitaId}`));
-    } catch {}
   }
 
-  async reabrirDocumentacion(visitaId: string): Promise<void> {
-    await this.borrarDocumentacion(visitaId);
+  async reabrirDocumentacion(
+    visitaId: string,
+    conservar: boolean = false
+  ): Promise<void> {
+    if (!conservar) {
+      await this.borrarDocumentacion(visitaId);
+    }
     await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
-      estado:           'obs_guardadas',
-      fechaDocGuardada: null,
-      fechaCompleto:    null,
-      actualizadoEn:    Timestamp.now(),
+      estado:              'obs_guardadas',
+      esCompletadoDirecto: false,
+      actualizadoEn:       Timestamp.now(),
     });
   }
 
   async regresarPendiente(visitaId: string): Promise<void> {
     await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
-      estado:        'pendiente',
-      tecnicoId:     '',
-      tecnicoNombre: '',
-      horaSalida:    null,
-      horaLlegada:   null,
-      horaInicio:    null,
-      horaTermino:   null,
-      actualizadoEn: Timestamp.now(),
+      estado:              'pendiente',
+      tecnicoId:           '',
+      tecnicoNombre:       '',
+      horaSalida:          null,
+      horaLlegada:         null,
+      horaInicio:          null,
+      horaTermino:         null,
+      esCompletadoDirecto: false,
+      actualizadoEn:       Timestamp.now(),
     });
   }
 
   async eliminarVisita(visitaId: string): Promise<void> {
-    try {
-      await deleteDoc(doc(this.fs, `visitas/${visitaId}`));
-    } catch {}
+    try { await deleteDoc(doc(this.fs, `visitas/${visitaId}`)); } catch {}
   }
 
   private async borrarDocumentacion(visitaId: string): Promise<void> {
-    try {
-      await deleteDoc(doc(this.fs, `documentacion/${visitaId}`));
-    } catch {}
+    try { await deleteDoc(doc(this.fs, `documentacion/${visitaId}`)); } catch {}
   }
 }

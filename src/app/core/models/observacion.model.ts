@@ -1,21 +1,19 @@
 export type Prioridad = 'alta' | 'media' | 'baja';
 
 export interface Observacion {
-    visitaId: string;
-    numero: number;
+    visitaId:    string;
+    numero:      number;
     descripcion: string;
-    prioridad: Prioridad;
-}
+    prioridad:   Prioridad;
+    nota?:       string;
+    }
 
-export interface ObservacionesGuardadas {
-    id?: string;
-    visitaId: string;
-    tecnicoId: string;
-    tecnicoNombre: string;
-    fecha: Date;
+    export interface ObservacionesGuardadas {
+    visitaId:         string;
+    tecnicoId:        string;
+    tecnicoNombre:    string;
+    fecha:            any;
     sinObservaciones: boolean;
-    observaciones: Observacion[];
-    bloqueada: boolean;
-    creadoEn?: Date;
-    actualizadoEn?: Date;
-}
+    observaciones:    Observacion[];
+    bloqueada:        boolean;
+    }
