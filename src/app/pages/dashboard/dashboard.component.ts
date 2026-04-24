@@ -13,7 +13,7 @@ import { AuthService } from '../../core/services/auth.service';
 
     <div class="dash-wrap">
 
-      <div class="dash-header" style="margin-top: 24px">
+      <div class="dash-header" style="margin-top: 50px">
         <div>
           <h1>Bienvenido, {{ auth.usuarioActual()?.nombre }}</h1>
           <p>Selecciona el módulo y el período que deseas gestionar.</p>

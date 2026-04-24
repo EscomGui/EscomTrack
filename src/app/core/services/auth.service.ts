@@ -1,7 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import {
   Auth, signInWithEmailAndPassword,
-  signOut, onAuthStateChanged, User
+  signOut, onAuthStateChanged, User,  
+  browserLocalPersistence, setPersistence
 } from '@angular/fire/auth';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
@@ -16,18 +17,49 @@ export class AuthService {
   usuarioActual = signal<Usuario | null>(null);
   cargando      = signal<boolean>(true);
 
-  constructor() {
-    onAuthStateChanged(this.auth, async (fireUser: User | null) => {
-      if (fireUser) {
-        const u = await this.cargarPerfil(fireUser.uid);
-        this.usuarioActual.set(u);
-        this.verificarSesionExpirada();
-      } else {
-        this.usuarioActual.set(null);
-      }
-      this.cargando.set(false);
+  // constructor() {
+  //   onAuthStateChanged(this.auth, async (fireUser: User | null) => {
+  //     if (fireUser) {
+  //       const u = await this.cargarPerfil(fireUser.uid);
+  //       this.usuarioActual.set(u);
+  //       this.verificarSesionExpirada();
+  //     } else {
+  //       this.usuarioActual.set(null);
+  //     }
+  //     this.cargando.set(false);
+  //   });
+  // }
+
+  // En el constructor, configura la persistencia al iniciar
+constructor() {
+  // Configura persistencia local ANTES de escuchar el estado
+  setPersistence(this.auth, browserLocalPersistence)
+    .then(() => {
+      onAuthStateChanged(this.auth, async (fireUser: User | null) => {
+        if (fireUser) {
+          const u = await this.cargarPerfil(fireUser.uid);
+          this.usuarioActual.set(u);
+          this.verificarSesionExpirada();
+        } else {
+          this.usuarioActual.set(null);
+        }
+        this.cargando.set(false);
+      });
+    })
+    .catch(() => {
+      // Si falla setPersistence, igual escuchar el estado
+      onAuthStateChanged(this.auth, async (fireUser: User | null) => {
+        if (fireUser) {
+          const u = await this.cargarPerfil(fireUser.uid);
+          this.usuarioActual.set(u);
+          this.verificarSesionExpirada();
+        } else {
+          this.usuarioActual.set(null);
+        }
+        this.cargando.set(false);
+      });
     });
-  }
+}
 
   async login(correo: string, password: string): Promise<void> {
     const cred = await signInWithEmailAndPassword(this.auth, correo, password);

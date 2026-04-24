@@ -22,7 +22,7 @@ import { DialogComponent } from './shared/components/dialog/dialog.component';
       <router-outlet />
       @if (mostrarFooter) {
         <footer class="app-footer">
-          © {{ anio }} RAGUI · ESCOM TRACK · Todos los derechos reservados
+          © {{ anio }} RAGUI · Sistemas ESCOM  
         </footer>
       }
     }

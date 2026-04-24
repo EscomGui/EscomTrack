@@ -24,7 +24,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="feat"><span class="feat-ico">📸</span>Evidencia fotográfica</div>
           <div class="feat"><span class="feat-ico">📄</span>Generación de reportes</div>
         </div>
-        <div class="cliente">© RAGUI – Sistemas ESCOM</div>
+        <div class="cliente">© {{ anio }} RAGUI · Sistemas ESCOM </div>
       </div>
 
       <div class="login-right" style="--login-bg: url('/assets/login-bg.jpg')">
@@ -50,6 +50,7 @@ import { AuthService } from '../../core/services/auth.service';
                 [disabled]="cargando()"
               />
             </div>
+            <br>
             <div class="form-group">
               <label>Contraseña</label>
               <div class="input-pwd">
@@ -68,6 +69,7 @@ import { AuthService } from '../../core/services/auth.service';
                 </button>
               </div>
             </div>
+            <br>
             <button
               type="submit"
               class="btn btn-primary w-full btn-lg"
@@ -79,9 +81,11 @@ import { AuthService } from '../../core/services/auth.service';
                 Ingresar al sistema
               }
             </button>
+
+            <p class="login-footer">© {{ anio }} RAGUI · Sistemas ESCOM </p>
           </form>
         </div>
-        <p class="login-footer">© RAGUI – Sistemas ESCOM · {{ anio }}</p>
+        
       </div>
 
     </div>
@@ -198,7 +202,8 @@ export class LoginComponent {
   async onLogin(): Promise<void> {
     if (!navigator.onLine) {
       this.error.set(
-        'Sin conexión a internet. Conéctate para iniciar sesión.'
+        'Sin conexión a internet. Si ya iniciaste sesión antes, ' +
+        'cierra y vuelve a abrir la app.'
       );
       return;
     }
@@ -212,11 +217,13 @@ export class LoginComponent {
         e?.code === 'auth/invalid-credential'
           ? 'Correo o contraseña incorrectos.'
           : e?.code === 'auth/network-request-failed'
-            ? 'Sin conexión a internet. Verifica tu red.'
+            ? 'Sin conexión. Conéctate e intenta de nuevo.'
             : e?.message || 'Error al iniciar sesión.';
       this.error.set(msg);
     } finally {
       this.cargando.set(false);
     }
   }
+
+  
 }

@@ -1194,3 +1194,20 @@ body.theme-white {
   .cal-table thead tr { background: #1a1a2e; }
   .sitio-card-movil   { background: #f9f9f9; }
 }
+
+.offline-badge {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #92400E;
+  color: #FDE68A;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 500;
+  box-shadow: var(--shadow-md);
+  animation: slideUp 200ms ease;
+  white-space: nowrap;
+}

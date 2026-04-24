@@ -136,6 +136,12 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       }
 
+      @if (!estaOnline()) {
+        <div class="offline-badge">
+          📵 Sin internet — modo offline
+        </div>
+      }
+
       <div class="menu-footer">
         <button class="btn btn-danger w-full" (click)="logout()">
           Cerrar sesión
@@ -179,6 +185,8 @@ export class NavbarComponent implements OnInit {
   menuAbierto     = signal(false);
   temaActual      = signal('');
   mostrarInstalar = signal(false);
+
+  estaOnline = signal(navigator.onLine);
   deferredPrompt: any = null;
 
   ngOnInit(): void {
@@ -196,6 +204,10 @@ export class NavbarComponent implements OnInit {
       this.mostrarInstalar.set(false);
       this.deferredPrompt = null;
     });
+
+    window.addEventListener('online',  () => this.estaOnline.set(true));
+    window.addEventListener('offline', () => this.estaOnline.set(false));
+
   }
 
   setTema(tema: string): void {
