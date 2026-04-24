@@ -55,24 +55,218 @@
 
 // ── Tema oscuro ──────────────────────────────────────────────────────────────
 body.theme-dark {
-  --azul-osc:    #050d14;
-  --gris-bg:     #0f0f0f;
-  --gris-border: #1e1e1e;
-  --gris-osc:    #f0f0f0;
+  --azul-osc:    #0d0d0d;
+  --azul-med:    #1a1a1a;
+  --azul-clar:   #4a9eff;
+  --azul-bg:     #1a1a2e;
+  --gris-bg:     #111111;
+  --gris-clar:   #2a2a2a;
+  --gris-border: #2a2a2a;
   --gris-med:    #888888;
-  background: #0f0f0f;
-  color: #f0f0f0;
+  --gris-osc:    #e0e0e0;
+  --rojo-bg:     rgba(220,38,38,.12);
+  --rojo-borde:  rgba(220,38,38,.3);
+  --rojo-osc:    #ef4444;
+  --amarillo-borde: rgba(245,158,11,.3);
+  --amarillo-osc:   #f59e0b;
+  --verde-borde:    rgba(16,185,129,.3);
+  --verde-osc:      #10b981;
+  --shadow-xs: 0 1px 3px rgba(0,0,0,.5);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.5);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.6);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.7);
 
-  .cal-table tbody tr       { background: #141414; color: #f0f0f0;
-                              &:hover { background: #1a1a1a; } }
-  .cal-table thead tr       { background: #050d14; }
-  .modal-box, .card,
-  .modulo-card, .form-card,
-  .login-card               { background: #141414; border-color: #1e1e1e; }
-  input, select, textarea   { background: #1a1a1a; color: #f0f0f0; border-color: #333; }
-  .banner                   { background: #1a1a1a; }
-  .gris-bg                  { background: #141414; }
-  .sitio-card-movil         { background: #141414; border-color: #1e1e1e; }
+  background: #0d0d0d;
+  color: #e0e0e0;
+
+  .form-card, .card  { background: #1a1a1a; border-color: #2a2a2a; color: #e0e0e0; }
+  .modal-box         { background: #1a1a1a; border-color: #2a2a2a; }
+  .modal-header      { border-color: #2a2a2a; }
+  .modal-footer      { border-color: #2a2a2a; }
+  .modal-body        { color: #e0e0e0; }
+
+  .cal-table thead tr      { background: #1a1a1a; }
+  .cal-table tbody tr      { border-bottom-color: #2a2a2a; }
+  .cal-table tbody tr:hover{ background: rgba(255,255,255,.04); }
+
+  input, select, textarea {
+    background: #1a1a1a !important;
+    border-color: #2a2a2a !important;
+    color: #e0e0e0 !important;
+  }
+
+  .btn-ghost {
+    background: rgba(255,255,255,.06); color: #ccc; border-color: #2a2a2a;
+    &:hover { background: rgba(255,255,255,.1); }
+  }
+  .btn-secondary {
+    background: #2a2a2a; border-color: #3a3a3a; color: #ccc;
+    &:hover { background: #333; }
+  }
+
+  .sitio-activo-banner {
+    background: linear-gradient(135deg, #1a1a2e, #111);
+    border-color: #4a9eff;
+  }
+  .sab-nombre { color: #e0e0e0; }
+  .sab-label  { color: #4a9eff; }
+
+  .filtro-tabs .ftab {
+    background: #1a1a1a; border-color: #2a2a2a; color: #888;
+    &:hover  { border-color: #555; color: #e0e0e0; }
+    &.active { background: #333; border-color: #555; color: #fff; }
+  }
+  .search-movil { background: #1a1a1a; border-color: #2a2a2a; color: #e0e0e0; }
+
+  .modal-backdrop { background: rgba(0,0,0,.8); }
+  .detalle-item   { background: #1a1a1a; border-color: #2a2a2a; }
+  .estado-opcion  {
+    background: #1a1a1a; border-color: #2a2a2a;
+    &:hover { background: #1a1a2e; border-color: #4a9eff; }
+  }
+
+  .sitio-card-movil {
+    background: #1a1a1a; border-color: #2a2a2a;
+    &.row-completo   { background: rgba(16,185,129,.08); }
+    &.row-obs        { background: rgba(109,40,217,.08); }
+    &.row-en-camino  { background: rgba(180,83,9,.08); }
+    &.row-en-sitio   { background: rgba(29,78,216,.08); }
+    &.row-en-proceso { background: rgba(146,64,14,.08); }
+  }
+
+  .menu-lateral { background: #0d0d0d; }
+  .menu-link {
+    color: rgba(255,255,255,.5);
+    &:hover { background: rgba(255,255,255,.05); color: #fff; }
+    &.menu-link-active {
+      background: rgba(74,158,255,.1);
+      color: #4a9eff; border-left-color: #4a9eff;
+    }
+  }
+  .menu-section-label { border-color: #2a2a2a; color: rgba(255,255,255,.2); }
+  .menu-header  { border-color: #2a2a2a; }
+  .menu-user    { border-color: #2a2a2a; }
+  .menu-footer  { border-color: #2a2a2a; }
+  .tema-btn     { background: rgba(255,255,255,.04); border-color: #2a2a2a; }
+  .menu-overlay { background: rgba(0,0,0,.7); }
+
+  .login-right        { background: #111; }
+  .login-right::before{ background: rgba(0,0,0,.55); }
+  .login-card         { background: #1a1a1a; border-color: #2a2a2a; }
+  .login-card h2      { color: #e0e0e0; }
+
+  .tabs    { border-color: #2a2a2a; }
+  .tab-btn { color: #666;
+    &:hover  { color: #4a9eff; }
+    &.active { color: #4a9eff; border-bottom-color: #4a9eff; }
+  }
+  .section-header h3 { color: #e0e0e0; }
+
+  .banner-info   { background: rgba(59,130,246,.1); border-color: rgba(59,130,246,.3); color: #93c5fd; }
+  .banner-warn   { background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.3); color: #fcd34d; }
+  .banner-danger { background: rgba(220,38,38,.1);  border-color: rgba(220,38,38,.3);  color: #fca5a5; }
+  .banner-lock   { background: rgba(16,185,129,.1); border-color: rgba(16,185,129,.3); color: #6ee7b7; }
+
+  .check-item    { border-color: #2a2a2a; }
+  .obs-card      { background: #1a1a1a; border-color: #2a2a2a; }
+  .obs-bloqueada { background: #1a1a1a; border-color: #2a2a2a; }
+  .app-footer    { border-color: #2a2a2a; color: #555; }
+  .text-muted    { color: #666 !important; }
+
+  // ── Badges visibles en modo oscuro ───────────────────────────────────────
+  .badge-pendiente  { background: rgba(100,100,100,.3); color: #aaa;    border: 1px solid #444; }
+  .badge-en-camino  { background: rgba(180,83,9,.25);   color: #fb923c; border: 1px solid rgba(180,83,9,.5); }
+  .badge-en-sitio   { background: rgba(29,78,216,.25);  color: #60a5fa; border: 1px solid rgba(29,78,216,.5); }
+  .badge-en-proceso { background: rgba(146,64,14,.25);  color: #fbbf24; border: 1px solid rgba(146,64,14,.5); }
+  .badge-obs        { background: rgba(109,40,217,.25); color: #c084fc; border: 1px solid rgba(109,40,217,.5); }
+  .badge-completo   { background: rgba(16,185,129,.25); color: #34d399; border: 1px solid rgba(16,185,129,.5); }
+
+  // ── Filtros tabs visibles ─────────────────────────────────────────────────
+  .ftab-en-camino.active  { background: #92400e; border-color: #b45309; color: #fde68a; }
+  .ftab-en-sitio.active   { background: #1e3a8a; border-color: #1d4ed8; color: #bfdbfe; }
+  .ftab-en-proceso.active { background: #78350f; border-color: #92400e; color: #fde68a; }
+  .ftab-obs.active        { background: #4c1d95; border-color: #6d28d9; color: #e9d5ff; }
+  .ftab-completo.active   { background: #064e3b; border-color: #065f46; color: #a7f3d0; }
+
+  // ── Botones de acción visibles ────────────────────────────────────────────
+  .btn-orange {
+    background: rgba(180,83,9,.2);
+    border-color: rgba(180,83,9,.5);
+    color: #fb923c;
+    &:hover { background: rgba(180,83,9,.35); }
+  }
+  .btn-primary {
+    background: rgba(29,78,216,.3);
+    border-color: rgba(29,78,216,.6);
+    color: #93c5fd;
+    &:hover { background: rgba(29,78,216,.45); }
+  }
+  .btn-success {
+    background: rgba(16,185,129,.2);
+    border-color: rgba(16,185,129,.5);
+    color: #34d399;
+    &:hover { background: rgba(16,185,129,.35); }
+  }
+  .btn-danger {
+    background: rgba(220,38,38,.2);
+    border-color: rgba(220,38,38,.5);
+    color: #fca5a5;
+    &:hover { background: rgba(220,38,38,.35); }
+  }
+  .btn-amber {
+    background: rgba(245,158,11,.2);
+    border-color: rgba(245,158,11,.5);
+    color: #fcd34d;
+    &:hover { background: rgba(245,158,11,.35); }
+  }
+}
+
+// ── Móvil — fix cards calendario ─────────────────────────────────────────
+@media (max-width: 768px) {
+  .sitio-card-movil {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--gris-border);
+    padding: 14px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+  .sitio-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .sitio-card-num  {
+    font-size: 10px;
+    color: var(--gris-med);
+    margin-bottom: 2px;
+  }
+  .sitio-card-nombre {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gris-osc);
+    line-height: 1.4;
+    word-break: break-word;   /* ← evita que se corten */
+    overflow-wrap: anywhere;
+  }
+  .sitio-card-acc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .sitio-card-acc .btn {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+  // Fix nombre cortado en modo oscuro
+  body.theme-dark .sitio-card-movil {
+    background: #1a1a1a;
+    border-color: #2a2a2a;
+  }
+  body.theme-dark .sitio-card-nombre { color: #e0e0e0; }
+  body.theme-dark .sitio-card-num    { color: #666; }
 }
 
 // ── Tema blanco ──────────────────────────────────────────────────────────────

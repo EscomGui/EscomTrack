@@ -471,6 +471,12 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
       .filtros-row { grid-template-columns: 1fr 1fr; }
       .admin-wrap  { padding: 76px 12px 24px; }
     }
+    @media (max-width: 768px) {
+      .filtros-row { grid-template-columns: 1fr 1fr; }
+      .admin-wrap  { padding: 76px 12px 24px; }
+      .col-acc-inner { flex-direction: column; }
+      .cal-table th, .cal-table td { font-size: 11px; padding: 6px 4px; }
+}
   `],
 })
 export class AdminComponent implements OnInit {

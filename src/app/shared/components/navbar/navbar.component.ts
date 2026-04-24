@@ -9,8 +9,6 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
     <nav class="navbar">
-
-      <!-- Hamburguesa (solo móvil) -->
       <button class="hamburger" (click)="menuAbierto.set(!menuAbierto())">
         <span [class]="menuAbierto() ? 'ham-x' : 'ham-bar'"></span>
       </button>
@@ -19,12 +17,11 @@ import { AuthService } from '../../../core/services/auth.service';
         <span class="b-escom">ESCOM</span><span class="b-track">TRACK</span>
       </div>
 
-      <!-- Links desktop -->
       <div class="navbar-links">
         <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-        <a [routerLink]="['/polizas', anioActual, 1]"
+        <a [routerLink]="['/polizas', anioActual, mesActual]"
            routerLinkActive="active">Pólizas</a>
-        <a [routerLink]="['/cedis', anioActual, 10]"
+        <a [routerLink]="['/cedis', anioActual, mesActualCedis]"
            routerLinkActive="active">CEDIS</a>
         @if (auth.esAdmin) {
           <a routerLink="/admin" routerLinkActive="active"
@@ -33,12 +30,20 @@ import { AuthService } from '../../../core/services/auth.service';
       </div>
 
       <div class="navbar-right">
-        <!-- Selector de tema desktop -->
         <div class="theme-btns desktop-only">
-          <button class="theme-btn" title="Gris"   (click)="setTema('')">☁</button>
-          <button class="theme-btn" title="Oscuro"  (click)="setTema('theme-dark')">🌙</button>
-          <button class="theme-btn" title="Blanco"  (click)="setTema('theme-white')">☀</button>
+          <button class="theme-btn" title="Gris"
+                  (click)="setTema('')">☁</button>
+          <button class="theme-btn" title="Oscuro"
+                  (click)="setTema('theme-dark')">🌙</button>
+          <button class="theme-btn" title="Blanco"
+                  (click)="setTema('theme-white')">☀</button>
         </div>
+
+        @if (mostrarInstalar()) {
+          <button class="install-btn desktop-only" (click)="instalarApp()">
+            📲 Instalar
+          </button>
+        }
 
         <div class="user-info">
           <span class="user-name">{{ auth.usuarioActual()?.nombre }}</span>
@@ -52,30 +57,21 @@ import { AuthService } from '../../../core/services/auth.service';
           Salir
         </button>
       </div>
-
     </nav>
 
-    <!-- Overlay -->
     @if (menuAbierto()) {
       <div class="menu-overlay" (click)="menuAbierto.set(false)"></div>
     }
 
-    <!-- Menú lateral móvil -->
     <div class="menu-lateral" [class.abierto]="menuAbierto()">
 
-      <!-- Header del menú -->
       <div class="menu-header">
-        <span class="menu-brand">
-          <b>ESCOM</b>TRACK
-        </span>
+        <span class="menu-brand"><b>ESCOM</b>TRACK</span>
         <button class="menu-close" (click)="menuAbierto.set(false)">×</button>
       </div>
 
-      <!-- Info usuario -->
       <div class="menu-user">
-        <div class="menu-avatar">
-          {{ inicial() }}
-        </div>
+        <div class="menu-avatar">{{ inicial() }}</div>
         <div>
           <div class="menu-user-nombre">{{ auth.usuarioActual()?.nombre }}</div>
           <span class="user-rol"
@@ -85,22 +81,20 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
       </div>
 
-      <!-- Links del menú -->
       <nav class="menu-nav">
-        <a class="menu-link"
-           routerLink="/dashboard"
+        <a class="menu-link" routerLink="/dashboard"
            routerLinkActive="menu-link-active"
            (click)="menuAbierto.set(false)">
           <span class="menu-ico">🏠</span> Dashboard
         </a>
         <a class="menu-link"
-           [routerLink]="['/polizas', anioActual, 1]"
+           [routerLink]="['/polizas', anioActual, mesActual]"
            routerLinkActive="menu-link-active"
            (click)="menuAbierto.set(false)">
           <span class="menu-ico">📋</span> Pólizas
         </a>
         <a class="menu-link"
-           [routerLink]="['/cedis', anioActual, 10]"
+           [routerLink]="['/cedis', anioActual, mesActualCedis]"
            routerLinkActive="menu-link-active"
            (click)="menuAbierto.set(false)">
           <span class="menu-ico">🏭</span> CEDIS
@@ -115,30 +109,33 @@ import { AuthService } from '../../../core/services/auth.service';
         }
       </nav>
 
-      <!-- Selector de tema -->
       <div class="menu-section-label">Tema de color</div>
       <div class="menu-temas">
         <button class="tema-btn"
                 [class.tema-activo]="temaActual() === ''"
                 (click)="setTema('')">
-          <span class="tema-preview tema-gris"></span>
-          Gris
+          <span class="tema-preview tema-gris"></span>Gris
         </button>
         <button class="tema-btn"
                 [class.tema-activo]="temaActual() === 'theme-dark'"
                 (click)="setTema('theme-dark')">
-          <span class="tema-preview tema-oscuro"></span>
-          Oscuro
+          <span class="tema-preview tema-oscuro"></span>Oscuro
         </button>
         <button class="tema-btn"
                 [class.tema-activo]="temaActual() === 'theme-white'"
                 (click)="setTema('theme-white')">
-          <span class="tema-preview tema-blanco"></span>
-          Blanco
+          <span class="tema-preview tema-blanco"></span>Blanco
         </button>
       </div>
 
-      <!-- Cerrar sesión -->
+      @if (mostrarInstalar()) {
+        <div style="padding: 0 20px 12px">
+          <button class="btn btn-primary w-full" (click)="instalarApp()">
+            📲 Instalar aplicación
+          </button>
+        </div>
+      }
+
       <div class="menu-footer">
         <button class="btn btn-danger w-full" (click)="logout()">
           Cerrar sesión
@@ -148,7 +145,17 @@ import { AuthService } from '../../../core/services/auth.service';
     </div>
   `,
   styles: [`
-    .hamburger { display: none; }
+    .hamburger    { display: none; }
+    .install-btn {
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.1);
+      color: #fff; font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer; transition: all var(--trans);
+      &:hover { background: rgba(255,255,255,.2); }
+    }
     @media (max-width: 768px) {
       .hamburger    { display: flex; }
       .navbar-links { display: none; }
@@ -159,15 +166,36 @@ import { AuthService } from '../../../core/services/auth.service';
   `],
 })
 export class NavbarComponent implements OnInit {
-  auth       = inject(AuthService);
-  anioActual = new Date().getFullYear();
-  menuAbierto = signal(false);
-  temaActual  = signal('');
+  auth = inject(AuthService);
+
+  anioActual     = new Date().getFullYear();
+  mesActual      = new Date().getMonth() + 1;
+  mesActualCedis = (() => {
+    // Ciclo CEDIS empieza en octubre
+    const m = new Date().getMonth() + 1;
+    return m >= 10 ? m : 10;
+  })();
+
+  menuAbierto     = signal(false);
+  temaActual      = signal('');
+  mostrarInstalar = signal(false);
+  deferredPrompt: any = null;
 
   ngOnInit(): void {
     const tema = localStorage.getItem('tema') ?? '';
     document.body.className = tema;
     this.temaActual.set(tema);
+
+    window.addEventListener('beforeinstallprompt', (e: any) => {
+      e.preventDefault();
+      this.deferredPrompt = e;
+      this.mostrarInstalar.set(true);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      this.mostrarInstalar.set(false);
+      this.deferredPrompt = null;
+    });
   }
 
   setTema(tema: string): void {
@@ -177,8 +205,15 @@ export class NavbarComponent implements OnInit {
   }
 
   inicial(): string {
-    const nombre = this.auth.usuarioActual()?.nombre ?? '';
-    return nombre.charAt(0).toUpperCase();
+    return (this.auth.usuarioActual()?.nombre ?? '').charAt(0).toUpperCase();
+  }
+
+  async instalarApp(): Promise<void> {
+    if (!this.deferredPrompt) return;
+    this.deferredPrompt.prompt();
+    const { outcome } = await this.deferredPrompt.userChoice;
+    if (outcome === 'accepted') this.mostrarInstalar.set(false);
+    this.deferredPrompt = null;
   }
 
   logout(): void {

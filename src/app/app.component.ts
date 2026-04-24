@@ -22,7 +22,7 @@ import { DialogComponent } from './shared/components/dialog/dialog.component';
       <router-outlet />
       @if (mostrarFooter) {
         <footer class="app-footer">
-          © {{ anio }} © RAGUI – Sistemas ESCOM
+          © {{ anio }} RAGUI · ESCOM TRACK · Todos los derechos reservados
         </footer>
       }
     }
@@ -66,9 +66,9 @@ import { DialogComponent } from './shared/components/dialog/dialog.component';
   `],
 })
 export class AppComponent implements OnInit {
-  cargando     = true;
+  cargando      = true;
   mostrarFooter = false;
-  anio         = new Date().getFullYear();
+  anio          = new Date().getFullYear();
 
   private fireAuth = inject(Auth);
   private auth     = inject(AuthService);

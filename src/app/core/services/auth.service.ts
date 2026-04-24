@@ -21,6 +21,7 @@ export class AuthService {
       if (fireUser) {
         const u = await this.cargarPerfil(fireUser.uid);
         this.usuarioActual.set(u);
+        this.verificarSesionExpirada();
       } else {
         this.usuarioActual.set(null);
       }
@@ -36,18 +37,32 @@ export class AuthService {
       throw new Error('Usuario inactivo o sin perfil.');
     }
     this.usuarioActual.set(u);
+    localStorage.setItem('login_time', Date.now().toString());
     this.router.navigate(['/dashboard']);
   }
 
   async logout(): Promise<void> {
     await signOut(this.auth);
     this.usuarioActual.set(null);
+    localStorage.removeItem('login_time');
     this.router.navigate(['/login']);
   }
 
   private async cargarPerfil(uid: string): Promise<Usuario | null> {
     const snap = await getDoc(doc(this.fs, `usuarios/${uid}`));
     return snap.exists() ? (snap.data() as Usuario) : null;
+  }
+
+  private verificarSesionExpirada(): void {
+    const loginTime = localStorage.getItem('login_time');
+    if (!loginTime) {
+      localStorage.setItem('login_time', Date.now().toString());
+      return;
+    }
+    const OCHO_HORAS = 8 * 60 * 60 * 1000;
+    if (Date.now() - +loginTime > OCHO_HORAS) {
+      this.logout();
+    }
   }
 
   get esAdmin():   boolean { return this.usuarioActual()?.rol === 'admin'; }
