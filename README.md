@@ -281,9 +281,9 @@ git push
 
 ## 👨‍💻 Desarrollado por
 
-**RAGUI** · Universidad Tecnológica del Centro de Veracruz
+**RAGUI**
 
 Sistema desarrollado para **Sistemas ESCOM**
-Cliente: **Grupo Pecuario San Antonio S.A. de C.V.**
+Cliente: **ESCOM**
 
 © 2026 RAGUI · ESCOM TRACK · Todos los derechos reservados
