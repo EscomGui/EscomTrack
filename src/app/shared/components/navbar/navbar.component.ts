@@ -109,6 +109,12 @@ import { AuthService } from '../../../core/services/auth.service';
         }
       </nav>
 
+      @if (!estaOnline()) {
+        <div class="offline-badge">
+          📵 Sin internet — modo offline
+        </div>
+      }
+
       <div class="menu-section-label">Tema de color</div>
       <div class="menu-temas">
         <button class="tema-btn"
@@ -133,12 +139,6 @@ import { AuthService } from '../../../core/services/auth.service';
           <button class="btn btn-primary w-full" (click)="instalarApp()">
             📲 Instalar aplicación
           </button>
-        </div>
-      }
-
-      @if (!estaOnline()) {
-        <div class="offline-badge">
-          📵 Sin internet — modo offline
         </div>
       }
 
