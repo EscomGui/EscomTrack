@@ -117,7 +117,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
               <span class="spinner"></span><span>Cargando usuarios...</span>
             </div>
           } @else {
-            <table class="cal-table">
+            <table class="cal-table admin-table">
               <thead>
                 <tr>
                   <th>Nombre</th>
@@ -130,23 +130,27 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
               <tbody>
                 @for (u of usuarios(); track u.uid) {
                   <tr>
-                    <td class="col-nombre">{{ u.nombre }}</td>
-                    <td class="text-muted">{{ u.correo }}</td>
-                    <td>
+                    <td data-label="Nombre" class="col-nombre">
+                      {{ u.nombre }}
+                    </td>
+                    <td data-label="Correo" class="text-muted">
+                      {{ u.correo }}
+                    </td>
+                    <td data-label="Rol">
                       <span class="badge"
                             [class]="u.rol === 'admin'
                               ? 'badge-obs' : 'badge-pendiente'">
                         {{ u.rol === 'admin' ? 'Admin' : 'Técnico' }}
                       </span>
                     </td>
-                    <td style="text-align:center">
+                    <td data-label="Estado" style="text-align:center">
                       <span class="badge"
                             [class]="u.activo
                               ? 'badge-completo' : 'badge-en-proceso'">
                         {{ u.activo ? 'Activo' : 'Inactivo' }}
                       </span>
                     </td>
-                    <td style="text-align:right">
+                    <td data-label="Acciones" style="text-align:right">
                       <div style="display:flex;gap:6px;justify-content:flex-end">
                         <button class="btn btn-sm"
                                 [class]="u.activo ? 'btn-secondary' : 'btn-success'"
@@ -213,7 +217,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
 
           @if (visitasBusqueda().length > 0) {
             <div style="overflow-x:auto">
-              <table class="cal-table">
+              <table class="cal-table admin-table">
                 <thead>
                   <tr>
                     <th>Sitio</th>
@@ -228,19 +232,28 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                 <tbody>
                   @for (v of visitasBusqueda(); track v.id) {
                     <tr [class]="'row-' + rowClass(v.estado)">
-                      <td class="col-nombre">{{ v.sitioNombre }}</td>
-                      <td class="text-muted" style="font-size:12px">
+                      <td data-label="Sitio"   class="col-nombre">
+                        {{ v.sitioNombre }}
+                      </td>
+                      <td data-label="Técnico" class="text-muted"
+                          style="font-size:12px">
                         {{ v.tecnicoNombre || '—' }}
                       </td>
-                      <td>
+                      <td data-label="Estado">
                         <span class="badge" [class]="badgeClass(v.estado)">
                           {{ labelEstado(v.estado) }}
                         </span>
                       </td>
-                      <td class="text-muted">{{ fmtHora(v.horaSalida) }}</td>
-                      <td class="text-muted">{{ fmtHora(v.horaLlegada) }}</td>
-                      <td class="text-muted">{{ fmtHora(v.horaTermino) }}</td>
-                      <td style="text-align:right">
+                      <td data-label="Salida"  class="text-muted">
+                        {{ fmtHora(v.horaSalida) }}
+                      </td>
+                      <td data-label="Llegada" class="text-muted">
+                        {{ fmtHora(v.horaLlegada) }}
+                      </td>
+                      <td data-label="Término" class="text-muted">
+                        {{ fmtHora(v.horaTermino) }}
+                      </td>
+                      <td data-label="Acciones" style="text-align:right">
                         <div class="col-acc-inner">
                           @if (v.estado === 'obs_guardadas' ||
                                v.estado === 'completo') {
@@ -293,8 +306,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
 
           <div class="banner banner-info mb-3">
             <span>ℹ</span>
-            Agrega un sitio extra a cualquier mes. Se insertará en la posición
-            que indiques y los demás se recorrerán hacia abajo.
+            Agrega un sitio extra a cualquier mes.
           </div>
 
           <div class="form-card">
@@ -415,23 +427,9 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
     <app-dialog />
   `,
   styles: [`
-    .admin-wrap    { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .admin-wrap    { max-width: 1100px; margin: 0 auto; padding: 80px 24px 32px; }
     .admin-header  { margin-bottom: 28px; }
     .admin-header h1 { margin-bottom: 4px; }
-    .tabs {
-      display: flex; gap: 2px;
-      border-bottom: 1px solid var(--gris-border);
-      margin-bottom: 24px; overflow-x: auto;
-    }
-    .tab-btn {
-      padding: 10px 20px; border: none; background: transparent;
-      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
-      color: var(--gris-med); cursor: pointer;
-      border-bottom: 2px solid transparent; margin-bottom: -1px;
-      transition: all var(--trans); white-space: nowrap;
-      &:hover  { color: var(--azul-clar); }
-      &.active { color: var(--azul-clar); border-bottom-color: var(--azul-clar); }
-    }
     .section-header {
       display: flex; align-items: center;
       justify-content: space-between; margin-bottom: 16px;
@@ -471,12 +469,6 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
       .filtros-row { grid-template-columns: 1fr 1fr; }
       .admin-wrap  { padding: 76px 12px 24px; }
     }
-    @media (max-width: 768px) {
-      .filtros-row { grid-template-columns: 1fr 1fr; }
-      .admin-wrap  { padding: 76px 12px 24px; }
-      .col-acc-inner { flex-direction: column; }
-      .cal-table th, .cal-table td { font-size: 11px; padding: 6px 4px; }
-}
   `],
 })
 export class AdminComponent implements OnInit {
@@ -542,7 +534,6 @@ export class AdminComponent implements OnInit {
       });
   }
 
-  // ── Usuarios ──────────────────────────────────────────────────────────────
   async crearUsuario(): Promise<void> {
     if (!this.nuevoNombre || !this.nuevoCorreo || !this.nuevoPassword) {
       this.errorUsuario.set('Completa todos los campos.');
@@ -618,7 +609,6 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  // ── Visitas ───────────────────────────────────────────────────────────────
   async buscarVisitas(): Promise<void> {
     this.buscando.set(true);
     this.busquedaRealizada.set(false);
@@ -671,7 +661,7 @@ export class AdminComponent implements OnInit {
       tipo: 'danger', icono: '⚠',
       titulo:    'Regresar a pendiente',
       mensaje:   `¿Regresar "${v.sitioNombre}" a pendiente?`,
-      detalle:   'Se borrarán observaciones, documentación y horarios. Esta acción no se puede deshacer.',
+      detalle:   'Se borrarán observaciones, documentación y horarios.',
       btnOk:     'Sí, regresar',
       btnCancel: 'Cancelar',
     });
@@ -685,7 +675,7 @@ export class AdminComponent implements OnInit {
       tipo: 'danger', icono: '🗑',
       titulo:    'Eliminar visita',
       mensaje:   `¿Eliminar permanentemente "${v.sitioNombre}"?`,
-      detalle:   'Esta acción no se puede deshacer. Se borrarán observaciones y documentación.',
+      detalle:   'Esta acción no se puede deshacer.',
       btnOk:     'Sí, eliminar',
       btnCancel: 'Cancelar',
     });
@@ -694,7 +684,6 @@ export class AdminComponent implements OnInit {
     this.visitasBusqueda.update(vs => vs.filter(x => x.id !== v.id));
   }
 
-  // ── Agregar sitio ─────────────────────────────────────────────────────────
   async agregarSitio(): Promise<void> {
     this.errorSitio.set('');
     this.exitoSitio.set('');
@@ -737,7 +726,6 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
   fmtHora(t: any): string {
     if (!t) return '—';
     const d = t?.toDate ? t.toDate() : new Date(t);

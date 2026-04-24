@@ -13,7 +13,7 @@ import { AuthService } from '../../core/services/auth.service';
 
     <div class="dash-wrap">
 
-      <div class="dash-header">
+      <div class="dash-header" style="margin-top: 24px">
         <div>
           <h1>Bienvenido, {{ auth.usuarioActual()?.nombre }}</h1>
           <p>Selecciona el módulo y el período que deseas gestionar.</p>
@@ -118,6 +118,13 @@ import { AuthService } from '../../core/services/auth.service';
     @media (max-width: 768px) {
       .modulos-grid { grid-template-columns: 1fr; }
     }
+
+    :host {
+      display: block;
+      min-height: calc(100.7vh - var(--navbar-h));
+      background: var(--gris-bg);
+    }
+    
   `],
 })
 export class DashboardComponent {

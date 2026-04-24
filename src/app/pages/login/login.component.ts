@@ -196,6 +196,12 @@ export class LoginComponent {
   error      = signal('');
 
   async onLogin(): Promise<void> {
+    if (!navigator.onLine) {
+      this.error.set(
+        'Sin conexión a internet. Conéctate para iniciar sesión.'
+      );
+      return;
+    }
     if (!this.correo || !this.password) return;
     this.cargando.set(true);
     this.error.set('');
@@ -205,7 +211,9 @@ export class LoginComponent {
       const msg =
         e?.code === 'auth/invalid-credential'
           ? 'Correo o contraseña incorrectos.'
-          : e?.message || 'Error al iniciar sesión.';
+          : e?.code === 'auth/network-request-failed'
+            ? 'Sin conexión a internet. Verifica tu red.'
+            : e?.message || 'Error al iniciar sesión.';
       this.error.set(msg);
     } finally {
       this.cargando.set(false);
