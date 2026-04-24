@@ -107,13 +107,15 @@ import { AuthService } from '../../../core/services/auth.service';
             <span class="menu-ico">⚙</span> Administración
           </a>
         }
-      </nav>
 
-      @if (!estaOnline()) {
+        @if (!estaOnline()) {
         <div class="offline-badge">
           📵 Sin internet — modo offline
         </div>
-      }
+        }
+      </nav>
+
+
 
       <div class="menu-section-label">Tema de color</div>
       <div class="menu-temas">
