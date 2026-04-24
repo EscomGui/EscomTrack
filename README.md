@@ -117,48 +117,6 @@ La aplicación funciona como PWA instalable en Android e iOS.
 
 ---
 
-## 🏗 Estructura del proyecto
-src/
-├── app/
-│   ├── core/
-│   │   ├── guards/
-│   │   │   ├── auth.guard.ts       # authGuard, adminGuard, superAdminGuard
-│   │   │   └── login.guard.ts      # Redirige al dashboard si ya hay sesión
-│   │   ├── models/
-│   │   │   ├── usuario.model.ts    # Roles: superadmin | admin | tecnico
-│   │   │   ├── visita.model.ts     # Estados y estructura de visita
-│   │   │   ├── observacion.model.ts
-│   │   │   └── documentacion.model.ts
-│   │   ├── services/
-│   │   │   ├── auth.service.ts     # Login, logout, roles, cambio de contraseña
-│   │   │   ├── visitas.service.ts  # CRUD de visitas y cambios de estado
-│   │   │   ├── observaciones.service.ts
-│   │   │   ├── documentacion.service.ts
-│   │   │   ├── storage.service.ts  # Cloudinary upload con compresión
-│   │   │   ├── reportes.service.ts # Generación .docx y .xlsx
-│   │   │   └── dialog.service.ts   # Diálogos de confirmación
-│   │   └── data/
-│   │       └── sitios-poliza.data.ts  # 112 pólizas + 46 CEDIS
-│   ├── shared/
-│   │   └── components/
-│   │       ├── navbar/             # Menú lateral móvil + temas + instalar PWA
-│   │       └── dialog/             # Diálogos flotantes custom
-│   └── pages/
-│       ├── login/                  # Login con imagen de fondo
-│       ├── dashboard/              # Selector de módulo y período
-│       ├── polizas/calendario/     # Calendario de pólizas
-│       ├── cedis/calendario/       # Calendario CEDIS
-│       ├── observaciones/modal-observaciones/
-│       ├── documentacion/modal-documentacion/
-│       └── admin/                  # Panel de administración
-├── environments/
-│   └── environment.ts              # Configuración Firebase
-├── styles.scss                     # Estilos globales + temas
-├── manifest.webmanifest            # Configuración PWA
-└── ngsw-config.json                # Service Worker
-
----
-
 ## ⚙️ Configuración Firebase
 
 **Proyecto:** `escom-track`
