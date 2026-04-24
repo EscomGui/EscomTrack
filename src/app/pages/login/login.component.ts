@@ -86,11 +86,6 @@ import { AuthService } from '../../core/services/auth.service';
           </form>
         </div>
         
-        @if (!estaOnline()) {
-        <div class="offline-badge">
-          📵 Sin internet — modo offline
-        </div>
-      }
       </div>
 
     </div>
