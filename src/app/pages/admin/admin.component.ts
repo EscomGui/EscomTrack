@@ -4,11 +4,11 @@ import { FormsModule } from '@angular/forms';
 import {
   Firestore, collection, collectionData,
   doc, setDoc, updateDoc,
-  Timestamp, query, where, deleteDoc
+  Timestamp, query, where, orderBy, deleteDoc
 } from '@angular/fire/firestore';
 import {
   Auth, createUserWithEmailAndPassword,
-  updatePassword, sendPasswordResetEmail
+  updatePassword
 } from '@angular/fire/auth';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 import { VisitasService } from '../../core/services/visitas.service';
@@ -238,6 +238,24 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
             </button>
           </div>
 
+          <!-- Toggle ver borrados — solo superadmin -->
+          @if (auth.esSuperAdmin) {
+            <div class="toggle-borrados mb-3">
+              <label class="toggle-label">
+                <input type="checkbox"
+                       [(ngModel)]="mostrarBorrados"
+                       (change)="buscarVisitas()" />
+                <span class="toggle-ico">👁</span>
+                Mostrar sitios ocultos (borrados)
+              </label>
+              @if (mostrarBorrados) {
+                <span class="badge badge-en-proceso" style="font-size:11px">
+                  Modo: todos visibles
+                </span>
+              }
+            </div>
+          }
+
           @if (visitasBusqueda().length > 0) {
             <div style="overflow-x:auto">
               <table class="cal-table admin-table">
@@ -249,23 +267,35 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                     <th>Salida</th>
                     <th>Llegada</th>
                     <th>Término</th>
+                    @if (auth.esSuperAdmin && mostrarBorrados) {
+                      <th style="text-align:center;width:70px">Visible</th>
+                    }
                     <th style="text-align:right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (v of visitasBusqueda(); track v.id) {
-                    <tr [class]="'row-' + rowClass(v.estado)">
-                      <td data-label="Sitio" class="col-nombre">
+                    <tr [class]="v.esBorrado
+                          ? 'row-borrado'
+                          : 'row-' + rowClass(v.estado)">
+                      <td data-label="Sitio" class="col-nombre"
+                          [style.opacity]="v.esBorrado ? '0.5' : '1'">
                         {{ v.sitioNombre }}
                       </td>
                       <td data-label="Técnico" class="text-muted"
-                          style="font-size:12px">
+                          style="font-size:12px"
+                          [style.opacity]="v.esBorrado ? '0.5' : '1'">
                         {{ v.tecnicoNombre || '—' }}
                       </td>
-                      <td data-label="Estado">
-                        <span class="badge" [class]="badgeClass(v.estado)">
-                          {{ labelEstado(v.estado) }}
-                        </span>
+                      <td data-label="Estado"
+                          [style.opacity]="v.esBorrado ? '0.5' : '1'">
+                        @if (v.esBorrado) {
+                          <span class="badge badge-pendiente">Oculto</span>
+                        } @else {
+                          <span class="badge" [class]="badgeClass(v.estado)">
+                            {{ labelEstado(v.estado) }}
+                          </span>
+                        }
                       </td>
                       <td data-label="Salida" class="text-muted">
                         {{ fmtHora(v.horaSalida) }}
@@ -276,39 +306,59 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                       <td data-label="Término" class="text-muted">
                         {{ fmtHora(v.horaTermino) }}
                       </td>
+                      @if (auth.esSuperAdmin && mostrarBorrados) {
+                        <td data-label="Visible" style="text-align:center">
+                          <span [title]="v.esBorrado
+                                  ? 'Oculto — no visible para técnicos ni admins'
+                                  : 'Visible para todos'"
+                                style="font-size:18px;cursor:default">
+                            {{ v.esBorrado ? '🚫' : '✅' }}
+                          </span>
+                        </td>
+                      }
                       <td data-label="Acciones" style="text-align:right">
                         <div class="col-acc-inner">
-                          @if (v.estado === 'obs_guardadas' ||
-                               v.estado === 'completo') {
-                            <button class="btn btn-danger btn-sm"
-                                    (click)="reabrirObs(v)">
-                              🔓 Obs.
+                          @if (!v.esBorrado) {
+                            @if (v.estado === 'obs_guardadas' ||
+                                 v.estado === 'completo') {
+                              <button class="btn btn-danger btn-sm"
+                                      (click)="reabrirObs(v)">
+                                🔓 Obs.
+                              </button>
+                            }
+                            @if (v.estado === 'completo') {
+                              <button class="btn btn-amber btn-sm"
+                                      (click)="reabrirDoc(v)">
+                                🔓 Doc.
+                              </button>
+                            }
+                            @if (v.estado !== 'pendiente') {
+                              <button class="btn btn-secondary btn-sm"
+                                      (click)="regresarPendiente(v)">
+                                ↩ Pendiente
+                              </button>
+                            }
+                            @if (auth.esSuperAdmin &&
+                                 v.estado !== 'completo') {
+                              <button class="btn btn-success btn-sm"
+                                      (click)="marcarCompletoDirecto(v)">
+                                ✅ Completar
+                              </button>
+                            }
+                            <button class="btn btn-danger btn-sm btn-icon"
+                                    title="Ocultar sitio"
+                                    (click)="eliminarVisita(v)">
+                              🗑
                             </button>
+                          } @else {
+                            <!-- Sitio borrado — solo superadmin puede restaurar -->
+                            @if (auth.esSuperAdmin) {
+                              <button class="btn btn-success btn-sm"
+                                      (click)="restaurarSitio(v)">
+                                👁 Restaurar
+                              </button>
+                            }
                           }
-                          @if (v.estado === 'completo') {
-                            <button class="btn btn-amber btn-sm"
-                                    (click)="reabrirDoc(v)">
-                              🔓 Doc.
-                            </button>
-                          }
-                          @if (v.estado !== 'pendiente') {
-                            <button class="btn btn-secondary btn-sm"
-                                    (click)="regresarPendiente(v)">
-                              ↩ Pendiente
-                            </button>
-                          }
-                          @if (auth.esSuperAdmin &&
-                               v.estado !== 'completo') {
-                            <button class="btn btn-success btn-sm"
-                                    (click)="marcarCompletoDirecto(v)">
-                              ✅ Completar
-                            </button>
-                          }
-                          <button class="btn btn-danger btn-sm btn-icon"
-                                  title="Eliminar visita"
-                                  (click)="eliminarVisita(v)">
-                            🗑
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -402,7 +452,6 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
             <h3>Mi perfil</h3>
           </div>
 
-          <!-- Info -->
           <div class="form-card">
             <div class="form-row">
               <div class="form-group">
@@ -478,13 +527,11 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
               Tu sesión como Super Admin no se verá afectada.
               Los usuarios podrán volver a iniciar sesión normalmente.
             </p>
-
             @if (exitoCierre()) {
               <div class="banner banner-lock mb-3">
                 <span>✓</span> {{ exitoCierre() }}
               </div>
             }
-
             <div style="display:flex;justify-content:flex-end">
               <button class="btn btn-danger"
                       [disabled]="cerrandoSesiones()"
@@ -681,6 +728,19 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
       display:grid; grid-template-columns:1fr 1fr 1fr auto;
       gap:12px; align-items:flex-end;
     }
+    .toggle-borrados {
+      display:flex; align-items:center; gap:12px;
+    }
+    .toggle-label {
+      display:flex; align-items:center; gap:8px;
+      cursor:pointer; font-size:13px; color:var(--gris-med);
+      user-select:none;
+      input[type="checkbox"] {
+        width:16px; height:16px; cursor:pointer;
+      }
+    }
+    .toggle-ico { font-size:16px; }
+    .row-borrado td { opacity:.6; background:#f9f9f9 !important; }
     .estado-carga {
       display:flex; justify-content:center; align-items:center;
       gap:12px; padding:40px; color:var(--gris-med);
@@ -706,6 +766,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
     @media (max-width:768px) {
       .filtros-row { grid-template-columns:1fr 1fr; }
       .admin-wrap  { padding:76px 12px 24px; }
+      .toggle-borrados { flex-wrap:wrap; }
     }
   `],
 })
@@ -750,6 +811,7 @@ export class AdminComponent implements OnInit {
   visitasBusqueda   = signal<Visita[]>([]);
   buscando          = signal(false);
   busquedaRealizada = signal(false);
+  mostrarBorrados   = false;
 
   // Sitios
   agregandoSitio   = signal(false);
@@ -913,7 +975,6 @@ export class AdminComponent implements OnInit {
         rol:           this.editRol,
         actualizadoEn: Timestamp.now(),
       };
-
       if (this.editPassword && this.editPassword.length >= 6) {
         datos.nuevaPassword = this.editPassword;
       } else if (this.editPassword && this.editPassword.length > 0) {
@@ -921,9 +982,7 @@ export class AdminComponent implements OnInit {
         this.guardandoEditar.set(false);
         return;
       }
-
       await updateDoc(doc(this.fs, `usuarios/${u.uid}`), datos);
-
       if (this.editPassword && this.editPassword.length >= 6) {
         await this.dialog.confirm({
           tipo:  'success', icono: '🔐',
@@ -933,7 +992,6 @@ export class AdminComponent implements OnInit {
           btnOk:   'Entendido',
         });
       }
-
       this.editPassword = '';
       this.usuarioEditando.set(null);
     } catch (e: any) {
@@ -1029,13 +1087,14 @@ export class AdminComponent implements OnInit {
         cerrarSesionTodos: true,
         cerrarSesionAt:    Timestamp.now(),
       });
-      // Después de 5 segundos resetea para que puedan volver a entrar
       setTimeout(async () => {
         await updateDoc(doc(this.fs, 'config/sistema'), {
           cerrarSesionTodos: false,
         });
       }, 5000);
-      this.exitoCierre.set('✓ Sesiones cerradas. Los usuarios fueron redirigidos al login.');
+      this.exitoCierre.set(
+        '✓ Sesiones cerradas. Los usuarios fueron redirigidos al login.'
+      );
       setTimeout(() => this.exitoCierre.set(''), 5000);
     } catch (e: any) {
       await this.dialog.confirm({
@@ -1059,10 +1118,15 @@ export class AdminComponent implements OnInit {
         where('tipo', '==', this.filtroTipo),
         where('anio', '==', +this.filtroAnio),
         where('mes',  '==', +this.filtroMes),
+        orderBy('sitioNombre'),
       );
       (collectionData(q, { idField:'id' }) as any)
         .subscribe((vs: Visita[]) => {
-          this.visitasBusqueda.set(vs);
+          // Filtra borrados según toggle
+          const filtrados = this.auth.esSuperAdmin && this.mostrarBorrados
+            ? vs
+            : vs.filter(v => !v.esBorrado);
+          this.visitasBusqueda.set(filtrados);
           this.busquedaRealizada.set(true);
           this.buscando.set(false);
         });
@@ -1160,15 +1224,41 @@ export class AdminComponent implements OnInit {
   async eliminarVisita(v: Visita): Promise<void> {
     const ok = await this.dialog.confirm({
       tipo: 'danger', icono: '🗑',
-      titulo:    'Eliminar visita',
-      mensaje:   `¿Eliminar permanentemente "${v.sitioNombre}"?`,
-      detalle:   'Esta acción no se puede deshacer.',
-      btnOk:     'Sí, eliminar',
+      titulo:    'Ocultar sitio',
+      mensaje:   `¿Confirmas ocultar "${v.sitioNombre}"?`,
+      detalle:   'El sitio dejará de ser visible. El Super Admin puede restaurarlo.',
+      btnOk:     'Sí, ocultar',
       btnCancel: 'Cancelar',
     });
     if (!ok) return;
     await this.visitasSvc.eliminarVisita(v.id!);
-    this.visitasBusqueda.update(vs => vs.filter(x => x.id !== v.id));
+    if (!this.mostrarBorrados) {
+      this.visitasBusqueda.update(vs => vs.filter(x => x.id !== v.id));
+    } else {
+      this.visitasBusqueda.update(vs =>
+        vs.map(x => x.id === v.id ? { ...x, esBorrado: true } : x)
+      );
+    }
+  }
+
+  async restaurarSitio(v: Visita): Promise<void> {
+    const ok = await this.dialog.confirm({
+      tipo:      'success',
+      icono:     '👁',
+      titulo:    'Restaurar sitio',
+      mensaje:   `¿Confirmas restaurar "${v.sitioNombre}"?`,
+      detalle:   'El sitio volverá a ser visible para técnicos y admins.',
+      btnOk:     'Sí, restaurar',
+      btnCancel: 'Cancelar',
+    });
+    if (!ok) return;
+    await updateDoc(doc(this.fs, `visitas/${v.id}`), {
+      esBorrado:     false,
+      actualizadoEn: Timestamp.now(),
+    });
+    this.visitasBusqueda.update(vs =>
+      vs.map(x => x.id === v.id ? { ...x, esBorrado: false } : x)
+    );
   }
 
   // ── Sitios ────────────────────────────────────────────────────────────────
@@ -1204,7 +1294,8 @@ export class AdminComponent implements OnInit {
       });
       this.exitoSitio.set(
         `"${this.nuevoSitioNombre}" agregado al mes de ` +
-        `${this.meses.find(m => m.num === +this.nuevoSitioMes)?.nombre} ${this.nuevoSitioAnio}.`
+        `${this.meses.find(m => m.num === +this.nuevoSitioMes)?.nombre} ` +
+        `${this.nuevoSitioAnio}.`
       );
       this.nuevoSitioNombre = '';
       this.nuevoSitioPos    = 1;
