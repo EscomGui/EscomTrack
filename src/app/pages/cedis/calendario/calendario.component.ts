@@ -79,7 +79,8 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
         <button class="ftab ftab-obs"
                 [class.active]="filtroEstado()==='obs_guardadas'"
                 (click)="filtroEstado.set('obs_guardadas')">
-          Obs. guardadas <span class="ftab-cnt">{{ cntEstado('obs_guardadas') }}</span>
+          Obs. guardadas
+          <span class="ftab-cnt">{{ cntEstado('obs_guardadas') }}</span>
         </button>
         <button class="ftab ftab-completo"
                 [class.active]="filtroEstado()==='completo'"
@@ -99,48 +100,47 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
         </div>
       } @else {
 
-        <!-- Banner sitio activo -->
-@if (serviciosEnCurso.length > 0) {
-  <div class="servicios-activos">
-
-    @if (esAdmin && serviciosEnCurso.length > 1) {
-      <div class="servicios-header">
-        <span class="servicios-titulo">
-          📍 Servicios en curso
-          <span class="servicios-cnt">{{ serviciosEnCurso.length }}</span>
-        </span>
-      </div>
-    }
-
-    @for (sv of serviciosEnCurso; track sv.id) {
-      <div class="sitio-activo-banner">
-        <div class="sab-left">
-          <span class="sab-ico">
-            {{ sv.estado === 'en_camino'    ? '🚗' :
-               sv.estado === 'en_sitio'     ? '📍' :
-               sv.estado === 'en_proceso'   ? '🔧' : '📋' }}
-          </span>
-          <div>
-            <div class="sab-label">
-              {{ esAdmin && sv.tecnicoNombre
-                 ? sv.tecnicoNombre
-                 : 'Tu servicio en curso' }}
-            </div>
-            <div class="sab-nombre">{{ sv.sitioNombre }}</div>
+        <!-- Servicios en curso -->
+        @if (serviciosEnCurso.length > 0) {
+          <div class="servicios-activos">
+            @if (esAdmin && serviciosEnCurso.length > 1) {
+              <div class="servicios-header">
+                <span class="servicios-titulo">
+                  📍 Servicios en curso
+                  <span class="servicios-cnt">
+                    {{ serviciosEnCurso.length }}
+                  </span>
+                </span>
+              </div>
+            }
+            @for (sv of serviciosEnCurso; track sv.id) {
+              <div class="sitio-activo-banner">
+                <div class="sab-left">
+                  <span class="sab-ico">
+                    {{ sv.estado === 'en_camino'   ? '🚗' :
+                       sv.estado === 'en_sitio'    ? '📍' :
+                       sv.estado === 'en_proceso'  ? '🔧' : '📋' }}
+                  </span>
+                  <div>
+                    <div class="sab-label">
+                      {{ esAdmin && sv.tecnicoNombre
+                         ? sv.tecnicoNombre
+                         : 'Tu servicio en curso' }}
+                    </div>
+                    <div class="sab-nombre">{{ sv.sitioNombre }}</div>
+                  </div>
+                </div>
+                <div class="sab-right">
+                  <span class="badge" [class]="badgeClass(sv.estado)">
+                    {{ labelEstado(sv.estado) }}
+                  </span>
+                  <ng-container
+                    *ngTemplateOutlet="acciones; context:{v:sv}" />
+                </div>
+              </div>
+            }
           </div>
-        </div>
-        <div class="sab-right">
-          <span class="badge" [class]="badgeClass(sv.estado)">
-            {{ labelEstado(sv.estado) }}
-          </span>
-          <ng-container
-            *ngTemplateOutlet="acciones; context:{v:sv}" />
-        </div>
-      </div>
-    }
-
-  </div>
-}
+        }
 
         <!-- Tabla desktop -->
         <table class="cal-table">
@@ -150,7 +150,8 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
               <th>
                 <div class="th-con-busqueda">
                   Sitio
-                  <div style="position:relative;display:flex;align-items:center">
+                  <div style="position:relative;display:flex;
+                              align-items:center">
                     <input type="text"
                            [ngModel]="busqueda()"
                            (ngModelChange)="busqueda.set($event)"
@@ -176,7 +177,9 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
                 <td class="col-num">{{ i + 1 }}</td>
                 <td class="col-nombre">{{ v.sitioNombre }}</td>
                 <td style="text-align:center">
-                  <span class="text-muted">{{ frecuencia(v.sitioId) }}×</span>
+                  <span class="text-muted">
+                    {{ frecuencia(v.sitioId) }}×
+                  </span>
                 </td>
                 <td class="text-muted" style="font-size:12px">
                   {{ v.tecnicoNombre || '—' }}
@@ -188,7 +191,8 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
                 </td>
                 <td class="col-acc">
                   <div class="col-acc-inner">
-                    <ng-container *ngTemplateOutlet="acciones; context:{v:v}" />
+                    <ng-container
+                      *ngTemplateOutlet="acciones; context:{v:v}" />
                   </div>
                 </td>
               </tr>
@@ -217,14 +221,16 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
             }
           </div>
           @for (v of visitasFiltradas; track v.id; let i = $index) {
-            <div class="sitio-card-movil" [class]="'row-' + rowClass(v.estado)">
+            <div class="sitio-card-movil"
+                 [class]="'row-' + rowClass(v.estado)">
               <div class="sitio-card-top">
                 <div>
                   <div class="sitio-card-num">
                     # {{ i+1 }} · {{ frecuencia(v.sitioId) }}× año
                   </div>
                   <div class="sitio-card-nombre">{{ v.sitioNombre }}</div>
-                  <div class="text-muted" style="font-size:11px;margin-top:2px">
+                  <div class="text-muted"
+                       style="font-size:11px;margin-top:2px">
                     {{ v.tecnicoNombre || 'Sin técnico asignado' }}
                   </div>
                 </div>
@@ -233,7 +239,8 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
                 </span>
               </div>
               <div class="sitio-card-acc">
-                <ng-container *ngTemplateOutlet="acciones; context:{v:v}" />
+                <ng-container
+                  *ngTemplateOutlet="acciones; context:{v:v}" />
               </div>
             </div>
           }
@@ -249,105 +256,180 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
 
     </div>
 
-    <!-- Template acciones — igual que pólizas -->
+    <!-- ── TEMPLATE ACCIONES ─────────────────────────────────────────────── -->
     <ng-template #acciones let-v="v">
 
-      @if (v.estado === 'completo' && v.esCompletadoDirecto && !esSuperAdmin) {
+      @if (v.esCompletadoDirecto && !esSuperAdmin) {
         <span class="badge-servicio">
-          Completado · {{ v.tecnicoNombre }}
+          ✅ Completado · {{ v.tecnicoNombre }}
         </span>
+
       } @else {
 
         @switch (v.estado) {
 
           @case ('pendiente') {
-            <button class="btn btn-orange btn-sm" (click)="onEnCamino(v)">
-              🚗 En camino
-            </button>
+            @if (!esSuperAdmin) {
+              <button class="btn btn-orange btn-sm"
+                      (click)="onEnCamino(v)">
+                🚗 En camino
+              </button>
+            }
             @if (esSuperAdmin) {
               <button class="btn btn-success btn-sm"
-                      (click)="completarDirecto(v)">
-                ✅ Completar
+                      (click)="cambiarEstadoDirecto(v)">
+                ⭐ Asignar estado
               </button>
             }
           }
 
           @case ('en_camino') {
             @if (esMiVisita(v) || esAdmin) {
-              <button class="btn btn-primary btn-sm" (click)="onEnSitio(v)">
+              <button class="btn btn-primary btn-sm"
+                      (click)="onEnSitio(v)">
                 📍 Llegué al sitio
               </button>
             } @else {
-              <span class="badge-servicio">En servicio: {{ v.tecnicoNombre }}</span>
+              <span class="badge-servicio">
+                En servicio: {{ v.tecnicoNombre }}
+              </span>
+            }
+            @if (esSuperAdmin) {
+              <button class="btn btn-success btn-sm"
+                      (click)="cambiarEstadoDirecto(v)">
+                ⭐ Asignar estado
+              </button>
             }
           }
 
           @case ('en_sitio') {
             @if (esMiVisita(v) || esAdmin) {
-              <button class="btn btn-secondary btn-sm" (click)="onRealizar(v)">
+              <button class="btn btn-secondary btn-sm"
+                      (click)="onRealizar(v)">
                 🔧 Iniciar servicio
               </button>
             } @else {
-              <span class="badge-servicio">En servicio: {{ v.tecnicoNombre }}</span>
+              <span class="badge-servicio">
+                En servicio: {{ v.tecnicoNombre }}
+              </span>
+            }
+            @if (esSuperAdmin) {
+              <button class="btn btn-success btn-sm"
+                      (click)="cambiarEstadoDirecto(v)">
+                ⭐ Asignar estado
+              </button>
             }
           }
 
           @case ('en_proceso') {
             @if (esMiVisita(v) || esAdmin) {
-              <button class="btn btn-secondary btn-sm" (click)="abrirObs(v)">
+              <button class="btn btn-secondary btn-sm"
+                      (click)="abrirObs(v)">
                 ✏️ Llenar observaciones
               </button>
             } @else {
-              <span class="badge-servicio">En servicio: {{ v.tecnicoNombre }}</span>
+              <span class="badge-servicio">
+                En servicio: {{ v.tecnicoNombre }}
+              </span>
+            }
+            @if (esSuperAdmin) {
+              <button class="btn btn-success btn-sm"
+                      (click)="cambiarEstadoDirecto(v)">
+                ⭐ Asignar estado
+              </button>
             }
           }
 
           @case ('obs_guardadas') {
             @if (esMiVisita(v) || esAdmin) {
-              <button class="btn btn-ghost btn-sm" (click)="abrirObs(v)">
+              <button class="btn btn-ghost btn-sm"
+                      (click)="abrirObs(v)">
                 ✓ Ver observaciones
               </button>
-              <button class="btn btn-primary btn-sm" (click)="abrirDoc(v)">
+              <button class="btn btn-primary btn-sm"
+                      (click)="abrirDoc(v)">
                 Llenar documentación
               </button>
             } @else {
-              <button class="btn btn-ghost btn-sm" (click)="abrirObs(v)">
+              <button class="btn btn-ghost btn-sm"
+                      (click)="abrirObs(v)">
                 ✓ Ver observaciones
               </button>
             }
             @if (esAdmin) {
-              <button class="btn btn-secondary btn-sm" (click)="abrirTabla(v)">
+              <button class="btn btn-secondary btn-sm"
+                      (click)="abrirTabla(v)">
                 Tabla prioridades
+              </button>
+            }
+            @if (esSuperAdmin) {
+              <button class="btn btn-success btn-sm"
+                      (click)="cambiarEstadoDirecto(v)">
+                ⭐ Asignar estado
               </button>
             }
           }
 
           @case ('completo') {
-            <button class="btn btn-ghost btn-sm" (click)="abrirObs(v)">
-              ✓ Observaciones
-            </button>
-            <button class="btn btn-ghost btn-sm" (click)="abrirDoc(v)">
-              ✓ Documentación
-            </button>
-            @if (esAdmin) {
-              <button class="btn btn-secondary btn-sm" (click)="abrirTabla(v)">
-                Tabla prioridades
+            @if (!v.esCompletadoDirecto) {
+              <button class="btn btn-ghost btn-sm"
+                      (click)="abrirObs(v)">
+                ✓ Observaciones
               </button>
-              <button class="btn btn-success btn-sm" (click)="abrirVista(v)">
-                Descargar .docx
+              <button class="btn btn-ghost btn-sm"
+                      (click)="abrirDoc(v)">
+                ✓ Documentación
+              </button>
+              @if (esAdmin) {
+                <button class="btn btn-secondary btn-sm"
+                        (click)="abrirTabla(v)">
+                  Tabla prioridades
+                </button>
+                <button class="btn btn-success btn-sm"
+                        (click)="abrirVista(v)">
+                  Descargar .docx
+                </button>
+              }
+            } @else if (esSuperAdmin) {
+              <span class="badge-servicio">
+                ✅ Completado directo · {{ v.tecnicoNombre }}
+              </span>
+            } @else {
+              <span class="badge-servicio">
+                ✅ Completado · {{ v.tecnicoNombre }}
+              </span>
+            }
+            @if (esSuperAdmin) {
+              <button class="btn btn-success btn-sm"
+                      (click)="cambiarEstadoDirecto(v)">
+                ⭐ Asignar estado
               </button>
             }
           }
 
         }
 
-        @if (esAdmin && v.estado !== 'pendiente') {
+        @if (esAdmin && !esSuperAdmin &&
+             v.estado !== 'pendiente' &&
+             !v.esCompletadoDirecto) {
           <button class="btn btn-ghost btn-sm btn-icon"
                   title="Ver detalles"
                   (click)="verDetalles(v)">🕐</button>
           <button class="btn btn-danger btn-sm btn-icon"
                   title="Regresar estado"
                   (click)="abrirRegresar(v)">↩</button>
+        }
+
+        @if (esSuperAdmin && v.estado !== 'pendiente') {
+          <button class="btn btn-ghost btn-sm btn-icon"
+                  title="Ver detalles"
+                  (click)="verDetalles(v)">🕐</button>
+          <button class="btn btn-danger btn-sm btn-icon"
+                  title="Regresar estado"
+                  (click)="abrirRegresar(v)">↩</button>
+          <button class="btn btn-amber btn-sm btn-icon"
+                  title="Reasignar técnico"
+                  (click)="abrirReasignar(v)">👤</button>
         }
 
       }
@@ -370,31 +452,43 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
             <div class="detalle-grid">
               <div class="detalle-item">
                 <span class="detalle-lbl">Técnico</span>
-                <span class="detalle-val">{{ visitaDetalle()!.tecnicoNombre || '—' }}</span>
+                <span class="detalle-val">
+                  {{ visitaDetalle()!.tecnicoNombre || '—' }}
+                </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">Estado actual</span>
-                <span class="badge" [class]="badgeClass(visitaDetalle()!.estado)">
+                <span class="badge"
+                      [class]="badgeClass(visitaDetalle()!.estado)">
                   {{ labelEstado(visitaDetalle()!.estado) }}
                 </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">🚗 Hora de salida</span>
-                <span class="detalle-val">{{ fmtFechaHora(visitaDetalle()!.horaSalida) }}</span>
+                <span class="detalle-val">
+                  {{ fmtFechaHora(visitaDetalle()!.horaSalida) }}
+                </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">📍 Hora de llegada</span>
-                <span class="detalle-val">{{ fmtFechaHora(visitaDetalle()!.horaLlegada) }}</span>
+                <span class="detalle-val">
+                  {{ fmtFechaHora(visitaDetalle()!.horaLlegada) }}
+                </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">🔧 Inicio de servicio</span>
-                <span class="detalle-val">{{ fmtFechaHora(visitaDetalle()!.horaInicio) }}</span>
+                <span class="detalle-val">
+                  {{ fmtFechaHora(visitaDetalle()!.horaInicio) }}
+                </span>
               </div>
               <div class="detalle-item">
                 <span class="detalle-lbl">✅ Hora de término</span>
-                <span class="detalle-val">{{ fmtFechaHora(visitaDetalle()!.horaTermino) }}</span>
+                <span class="detalle-val">
+                  {{ fmtFechaHora(visitaDetalle()!.horaTermino) }}
+                </span>
               </div>
-              @if (visitaDetalle()!.horaSalida && visitaDetalle()!.horaTermino) {
+              @if (visitaDetalle()!.horaSalida &&
+                   visitaDetalle()!.horaTermino) {
                 <div class="detalle-item detalle-full">
                   <span class="detalle-lbl">⏱ Duración total</span>
                   <span class="detalle-val detalle-duracion">
@@ -439,7 +533,8 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
               @for (e of estadosAnteriores(visitaRegresar()!.estado);
                     track e.valor) {
                 <button class="estado-opcion"
-                        (click)="confirmarRegresar(visitaRegresar()!, e.valor)">
+                        (click)="confirmarRegresar(
+                          visitaRegresar()!, e.valor)">
                   <span class="estado-opcion-ico">{{ e.icono }}</span>
                   <div>
                     <div class="estado-opcion-nombre">{{ e.label }}</div>
@@ -459,41 +554,125 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
       </div>
     }
 
-    <!-- Modal completar directo superadmin -->
-    @if (visitaCompletarDirecto()) {
-      <div class="modal-backdrop" (click)="visitaCompletarDirecto.set(null)">
+    <!-- Modal asignar estado — solo superadmin -->
+    @if (visitaCambiarEstado()) {
+      <div class="modal-backdrop"
+           (click)="visitaCambiarEstado.set(null)">
         <div class="modal-box" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <span class="modal-title">✅ Marcar como completado</span>
+            <span class="modal-title">⭐ Asignar estado</span>
             <button class="modal-close"
-                    (click)="visitaCompletarDirecto.set(null)">×</button>
+                    (click)="visitaCambiarEstado.set(null)">×</button>
           </div>
           <div class="modal-body">
-            <div class="banner banner-warn mb-3">
-              <span>⚠</span>
-              Marcará el sitio como completo sin observaciones ni documentación.
+            <div class="banner banner-info mb-3">
+              <span>⭐</span>
+              Como Super Admin puedes asignar cualquier estado
+              directamente.
             </div>
-            <p style="margin-bottom:8px;font-size:13px;color:var(--gris-osc)">
-              Sitio: <strong>{{ visitaCompletarDirecto()!.sitioNombre }}</strong>
+            <p style="margin-bottom:12px;font-size:13px;
+                      color:var(--gris-osc)">
+              Sitio:
+              <strong>{{ visitaCambiarEstado()!.sitioNombre }}</strong>
             </p>
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom:14px">
               <label>Técnico responsable (obligatorio)</label>
-              <select [(ngModel)]="tecnicoSelDirecto">
+              <select [(ngModel)]="tecnicoSelCambio">
                 <option value="">— Selecciona técnico —</option>
                 @for (t of tecnicosDisponibles(); track t.uid) {
                   <option [value]="t.nombre">{{ t.nombre }}</option>
                 }
               </select>
             </div>
+            <div class="form-group">
+              <label>Estado a asignar</label>
+              <div class="estados-lista">
+                @for (e of todosLosEstados; track e.valor) {
+                  <button class="estado-opcion"
+                          [class.estado-sel]="estadoSelCambio === e.valor"
+                          (click)="estadoSelCambio = e.valor">
+                    <span class="estado-opcion-ico">{{ e.icono }}</span>
+                    <div>
+                      <div class="estado-opcion-nombre">{{ e.label }}</div>
+                      <div class="estado-opcion-desc">{{ e.desc }}</div>
+                    </div>
+                    @if (estadoSelCambio === e.valor) {
+                      <span style="margin-left:auto;
+                                   color:var(--azul-clar)">✓</span>
+                    }
+                  </button>
+                }
+              </div>
+            </div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary"
-                    (click)="visitaCompletarDirecto.set(null)">Cancelar</button>
+                    (click)="visitaCambiarEstado.set(null)">
+              Cancelar
+            </button>
             <button class="btn btn-success"
-                    [disabled]="!tecnicoSelDirecto || completandoDirecto()"
-                    (click)="confirmarCompletarDirecto()">
-              @if (completandoDirecto()) { <span class="spinner"></span> }
-              Confirmar completado
+                    [disabled]="!tecnicoSelCambio ||
+                                !estadoSelCambio ||
+                                cambiandoEstado()"
+                    (click)="confirmarCambioEstado()">
+              @if (cambiandoEstado()) { <span class="spinner"></span> }
+              Confirmar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Modal reasignar técnico — solo superadmin -->
+    @if (visitaReasignar()) {
+      <div class="modal-backdrop" (click)="visitaReasignar.set(null)">
+        <div class="modal-box" (click)="$event.stopPropagation()"
+             style="max-width:400px">
+          <div class="modal-header">
+            <span class="modal-title">👤 Reasignar técnico</span>
+            <button class="modal-close"
+                    (click)="visitaReasignar.set(null)">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="banner banner-info mb-3">
+              <span>⭐</span>
+              Solo el Super Admin puede cambiar el técnico
+              una vez iniciado el servicio.
+            </div>
+            <p style="margin-bottom:12px;font-size:13px;
+                      color:var(--gris-osc)">
+              Sitio:
+              <strong>{{ visitaReasignar()!.sitioNombre }}</strong>
+            </p>
+            <p style="margin-bottom:12px;font-size:12px;
+                      color:var(--gris-med)">
+              Técnico actual:
+              <strong>
+                {{ visitaReasignar()!.tecnicoNombre || '—' }}
+              </strong>
+            </p>
+            <div class="form-group">
+              <label>Nuevo técnico</label>
+              <select [(ngModel)]="tecnicoReasignar">
+                <option value="">— Selecciona técnico —</option>
+                @for (t of tecnicosDisponibles(); track t.uid) {
+                  <option [value]="t.uid + '|' + t.nombre">
+                    {{ t.nombre }}
+                  </option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary"
+                    (click)="visitaReasignar.set(null)">
+              Cancelar
+            </button>
+            <button class="btn btn-primary"
+                    [disabled]="!tecnicoReasignar || reasignando()"
+                    (click)="confirmarReasignar()">
+              @if (reasignando()) { <span class="spinner"></span> }
+              Reasignar
             </button>
           </div>
         </div>
@@ -523,12 +702,28 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
     <app-dialog />
   `,
   styles: [`
-    .cal-wrap  { max-width: 1100px; margin: 0 auto; padding: 90px 24px 28px; }
-    .sitios-movil { display: none; }
-    @media (max-width: 768px) {
-      .cal-table    { display: none; }
-      .sitios-movil { display: block; }
-      .cal-wrap     { padding: 76px 12px 24px; }
+    .cal-wrap     { max-width:1100px; margin:0 auto; padding:90px 24px 28px; }
+    .sitios-movil { display:none; }
+    .servicios-activos { margin-bottom:16px; }
+    .servicios-header  { margin-bottom:8px; }
+    .servicios-titulo  {
+      font-size:12px; font-weight:600; color:var(--azul-med);
+      text-transform:uppercase; letter-spacing:.06em;
+      display:flex; align-items:center; gap:8px;
+    }
+    .servicios-cnt {
+      background:var(--azul-clar); color:#fff;
+      font-size:10px; padding:1px 7px;
+      border-radius:20px; font-weight:700;
+    }
+    .estado-sel {
+      border-color: var(--azul-clar) !important;
+      background:   var(--azul-bg)   !important;
+    }
+    @media (max-width:768px) {
+      .cal-table    { display:none; }
+      .sitios-movil { display:block; }
+      .cal-wrap     { padding:76px 12px 24px; }
     }
   `],
 })
@@ -553,13 +748,34 @@ export class CalendarioCedisComponent implements OnInit, OnDestroy {
   modalActivo            = signal<'obs' | 'doc' | null>(null);
   visitaDetalle          = signal<Visita | null>(null);
   visitaRegresar         = signal<Visita | null>(null);
-  visitaCompletarDirecto = signal<Visita | null>(null);
-  tecnicoSelDirecto      = '';
-  completandoDirecto     = signal(false);
+  visitaCambiarEstado    = signal<Visita | null>(null);
+  visitaReasignar        = signal<Visita | null>(null);
+  tecnicoSelCambio       = '';
+  estadoSelCambio: EstadoVisita | '' = '';
+  cambiandoEstado        = signal(false);
+  tecnicoReasignar       = '';
+  reasignando            = signal(false);
   tecnicosDisponibles    = signal<{ uid: string; nombre: string }[]>([]);
 
   get esAdmin():      boolean { return this.auth.esAdmin; }
   get esSuperAdmin(): boolean { return this.auth.esSuperAdmin; }
+
+  todosLosEstados: {
+    valor: EstadoVisita; label: string; icono: string; desc: string;
+  }[] = [
+    { valor:'pendiente',     label:'Pendiente',
+      icono:'⏳', desc:'Sin iniciar — quita horarios y técnico' },
+    { valor:'en_camino',     label:'En camino',
+      icono:'🚗', desc:'Técnico en ruta al sitio' },
+    { valor:'en_sitio',      label:'En sitio',
+      icono:'📍', desc:'Técnico llegó al sitio' },
+    { valor:'en_proceso',    label:'En proceso',
+      icono:'🔧', desc:'Servicio en curso' },
+    { valor:'obs_guardadas', label:'Observaciones guardadas',
+      icono:'📋', desc:'Observaciones completadas' },
+    { valor:'completo',      label:'Completo',
+      icono:'✅', desc:'Marca como completado directo sin obs/doc' },
+  ];
 
   get visitasFiltradas(): Visita[] {
     let lista = this.visitas();
@@ -576,17 +792,17 @@ export class CalendarioCedisComponent implements OnInit, OnDestroy {
     return lista;
   }
 
-get serviciosEnCurso(): Visita[] {
-  const activos = ['en_camino','en_sitio','en_proceso','obs_guardadas'];
-  if (this.esAdmin) {
-    return this.visitas().filter(v => activos.includes(v.estado));
+  get serviciosEnCurso(): Visita[] {
+    const activos = ['en_camino','en_sitio','en_proceso','obs_guardadas'];
+    if (this.esAdmin) {
+      return this.visitas().filter(v => activos.includes(v.estado));
+    }
+    const uid = this.auth.usuarioActual()?.uid;
+    if (!uid) return [];
+    return this.visitas().filter(v =>
+      v.tecnicoId === uid && activos.includes(v.estado)
+    );
   }
-  const uid = this.auth.usuarioActual()?.uid;
-  if (!uid) return [];
-  return this.visitas().filter(v =>
-    v.tecnicoId === uid && activos.includes(v.estado)
-  );
-}
 
   cntEstado(estado: EstadoVisita): number {
     return this.visitas().filter(v => v.estado === estado).length;
@@ -728,26 +944,77 @@ get serviciosEnCurso(): Visita[] {
     await this.visitasSvc.marcarRealizado(v.id!);
   }
 
-  completarDirecto(v: Visita): void {
-    this.visitaCompletarDirecto.set(v);
-    this.tecnicoSelDirecto = '';
+  cambiarEstadoDirecto(v: Visita): void {
+    this.visitaCambiarEstado.set(v);
+    this.tecnicoSelCambio = v.tecnicoNombre ?? '';
+    this.estadoSelCambio  = v.estado;
   }
 
-  async confirmarCompletarDirecto(): Promise<void> {
-    const v = this.visitaCompletarDirecto();
-    if (!v || !this.tecnicoSelDirecto) return;
-    this.completandoDirecto.set(true);
+  async confirmarCambioEstado(): Promise<void> {
+    const v = this.visitaCambiarEstado();
+    if (!v || !this.tecnicoSelCambio || !this.estadoSelCambio) return;
+    const estaCompleto = this.estadoSelCambio === 'completo';
+    const ok = await this.dialog.confirm({
+      tipo:      estaCompleto ? 'success' : 'warn',
+      icono:     '⭐',
+      titulo:    `Asignar: ${this.labelEstado(this.estadoSelCambio)}`,
+      mensaje:   `¿Confirmas asignar "${this.labelEstado(this.estadoSelCambio)}" a "${v.sitioNombre}"?`,
+      detalle:   estaCompleto
+        ? 'Se marcará como completo sin obs/doc. Los demás no verán botones.'
+        : 'Solo cambia el estado. La información existente se conserva.',
+      btnOk:     'Sí, confirmar',
+      btnCancel: 'Cancelar',
+    });
+    if (!ok) return;
+    this.cambiandoEstado.set(true);
     try {
-      await this.visitasSvc.marcarCompletoDirecto(v.id!, this.tecnicoSelDirecto);
-      this.visitaCompletarDirecto.set(null);
+      await this.visitasSvc.cambiarEstadoDirecto(
+        v.id!,
+        this.estadoSelCambio,
+        this.tecnicoSelCambio,
+        estaCompleto
+      );
+      this.visitaCambiarEstado.set(null);
     } finally {
-      this.completandoDirecto.set(false);
+      this.cambiandoEstado.set(false);
+    }
+  }
+
+  abrirReasignar(v: Visita): void {
+    this.visitaReasignar.set(v);
+    this.tecnicoReasignar = '';
+  }
+
+  async confirmarReasignar(): Promise<void> {
+    const v = this.visitaReasignar();
+    if (!v || !this.tecnicoReasignar) return;
+    const [uid, nombre] = this.tecnicoReasignar.split('|');
+    const ok = await this.dialog.confirm({
+      tipo:      'warn',
+      icono:     '👤',
+      titulo:    'Reasignar técnico',
+      mensaje:   `¿Confirmas asignar a "${nombre}" en "${v.sitioNombre}"?`,
+      detalle:   'El técnico anterior será reemplazado.',
+      btnOk:     'Sí, reasignar',
+      btnCancel: 'Cancelar',
+    });
+    if (!ok) return;
+    this.reasignando.set(true);
+    try {
+      await this.visitasSvc.actualizarTecnico(v.id!, uid, nombre);
+      this.visitaReasignar.set(null);
+    } finally {
+      this.reasignando.set(false);
     }
   }
 
   abrirRegresar(v: Visita):  void { this.visitaRegresar.set(v); }
-  abrirObs(v: Visita):       void { this.visitaModal.set(v); this.modalActivo.set('obs'); }
-  abrirDoc(v: Visita):       void { this.visitaModal.set(v); this.modalActivo.set('doc'); }
+  abrirObs(v: Visita):       void {
+    this.visitaModal.set(v); this.modalActivo.set('obs');
+  }
+  abrirDoc(v: Visita):       void {
+    this.visitaModal.set(v); this.modalActivo.set('doc');
+  }
   verDetalles(v: Visita):    void { this.visitaDetalle.set(v); }
 
   estadosAnteriores(estadoActual: EstadoVisita): {
@@ -756,29 +1023,33 @@ get serviciosEnCurso(): Visita[] {
   }[] {
     const todos = [
       {
-        valor: 'pendiente' as EstadoVisita, label: 'Pendiente', icono: '⏳',
+        valor: 'pendiente' as EstadoVisita,
+        label: 'Pendiente', icono: '⏳',
         desc:           'Borra técnico, horarios, observaciones y documentación',
-        descSuperAdmin: 'Borra técnico y horarios. Conserva observaciones y documentación',
+        descSuperAdmin: 'Borra técnico y horarios. Conserva obs y documentación',
       },
       {
-        valor: 'en_camino' as EstadoVisita, label: 'En camino', icono: '🚗',
+        valor: 'en_camino' as EstadoVisita,
+        label: 'En camino', icono: '🚗',
         desc:           'Conserva técnico. Borra observaciones y documentación',
         descSuperAdmin: 'Conserva técnico, observaciones y documentación',
       },
       {
-        valor: 'en_sitio' as EstadoVisita, label: 'En sitio', icono: '📍',
+        valor: 'en_sitio' as EstadoVisita,
+        label: 'En sitio', icono: '📍',
         desc:           'Conserva técnico. Borra observaciones y documentación',
         descSuperAdmin: 'Conserva técnico, observaciones y documentación',
       },
       {
-        valor: 'en_proceso' as EstadoVisita, label: 'En proceso', icono: '🔧',
+        valor: 'en_proceso' as EstadoVisita,
+        label: 'En proceso', icono: '🔧',
         desc:           'Conserva técnico. Borra observaciones y documentación',
         descSuperAdmin: 'Conserva técnico, observaciones y documentación',
       },
       {
-        valor: 'obs_guardadas' as EstadoVisita, label: 'Observaciones guardadas',
-        icono: '📋',
-        desc:           'Conserva técnico y observaciones. Borra solo documentación',
+        valor: 'obs_guardadas' as EstadoVisita,
+        label: 'Observaciones guardadas', icono: '📋',
+        desc:           'Conserva técnico y obs. Borra solo documentación',
         descSuperAdmin: 'Conserva técnico, observaciones y documentación',
       },
     ];
@@ -792,22 +1063,21 @@ get serviciosEnCurso(): Visita[] {
 
   async confirmarRegresar(v: Visita, estado: EstadoVisita): Promise<void> {
     this.visitaRegresar.set(null);
-    const estadoLabel = this.labelEstado(estado);
     const esSA = this.esSuperAdmin;
     const ok = await this.dialog.confirm({
       tipo:      estado === 'pendiente' ? 'danger' : 'warn',
       icono:     '↩',
-      titulo:    `Regresar a ${estadoLabel}`,
-      mensaje:   `¿Confirmas regresar "${v.sitioNombre}" a ${estadoLabel}?`,
+      titulo:    `Regresar a ${this.labelEstado(estado)}`,
+      mensaje:   `¿Confirmas regresar "${v.sitioNombre}" a ${this.labelEstado(estado)}?`,
       detalle:   esSA
         ? estado === 'pendiente'
-          ? 'Se borrará el técnico y horarios. Observaciones y documentación se conservan.'
+          ? 'Se borrará el técnico y horarios. Obs y documentación se conservan.'
           : 'Solo se cambia el estado. Toda la información se conserva.'
         : estado === 'pendiente'
           ? 'Se borrará el técnico, horarios, observaciones y documentación.'
           : estado === 'obs_guardadas'
-            ? 'Se borrará la documentación. Técnico y observaciones se conservan.'
-            : 'Se borrarán observaciones y documentación. El técnico se conserva.',
+            ? 'Se borrará la documentación. Técnico y obs se conservan.'
+            : 'Se borrarán observaciones y documentación.',
       btnOk:     'Sí, regresar',
       btnCancel: 'Cancelar',
     });
@@ -817,7 +1087,9 @@ get serviciosEnCurso(): Visita[] {
 
   async abrirTabla(v: Visita): Promise<void> {
     const obs = await this.obsSvc.getObservaciones(v.id!);
-    this.reportesSvc.descargarXlsx(v.sitioNombre, obs?.observaciones ?? []);
+    this.reportesSvc.descargarXlsx(
+      v.sitioNombre, obs?.observaciones ?? []
+    );
   }
 
   async abrirVista(v: Visita): Promise<void> {
@@ -834,15 +1106,19 @@ get serviciosEnCurso(): Visita[] {
     const observaciones = (obs?.observaciones ?? []).map((o: any) => {
       const itemObs = doc.items.find((i: any) => i.id === `obs_${o.numero}`);
       return {
-        numero: o.numero, descripcion: o.descripcion, prioridad: o.prioridad,
-        fotoUrl: itemObs?.fotos?.[0]?.url ?? null,
+        numero:      o.numero,
+        descripcion: o.descripcion,
+        prioridad:   o.prioridad,
+        fotoUrl:     itemObs?.fotos?.[0]?.url ?? null,
         orientacion: itemObs?.fotos?.[0]?.orientacion ?? 'horizontal',
-        sinFoto: itemObs?.sinFotos ?? false,
+        sinFoto:     itemObs?.sinFotos ?? false,
       };
     });
     await this.reportesSvc.descargarDocx({
-      sitioNombre: v.sitioNombre, tecnicoNombre: doc.tecnicoNombre,
-      fecha, tipo: v.tipo, mesAnio, items: doc.items, observaciones,
+      sitioNombre:   v.sitioNombre,
+      tecnicoNombre: doc.tecnicoNombre,
+      fecha, tipo: v.tipo, mesAnio,
+      items: doc.items, observaciones,
     });
   }
 
@@ -875,7 +1151,7 @@ get serviciosEnCurso(): Visita[] {
   }
 
   rowClass(e: EstadoVisita): string {
-    const m: Record<EstadoVisita,string> = {
+    const m: Record<EstadoVisita, string> = {
       pendiente:'', en_camino:'en-camino', en_sitio:'en-sitio',
       en_proceso:'en-proceso', obs_guardadas:'obs', completo:'completo'
     };
@@ -883,7 +1159,7 @@ get serviciosEnCurso(): Visita[] {
   }
 
   badgeClass(e: EstadoVisita): string {
-    const m: Record<EstadoVisita,string> = {
+    const m: Record<EstadoVisita, string> = {
       pendiente:'badge-pendiente', en_camino:'badge-en-camino',
       en_sitio:'badge-en-sitio', en_proceso:'badge-en-proceso',
       obs_guardadas:'badge-obs', completo:'badge-completo'
@@ -892,7 +1168,7 @@ get serviciosEnCurso(): Visita[] {
   }
 
   labelEstado(e: EstadoVisita): string {
-    const m: Record<EstadoVisita,string> = {
+    const m: Record<EstadoVisita, string> = {
       pendiente:'Pendiente', en_camino:'En camino', en_sitio:'En sitio',
       en_proceso:'En proceso', obs_guardadas:'Observaciones guardadas',
       completo:'Completo'
@@ -902,6 +1178,7 @@ get serviciosEnCurso(): Visita[] {
 
   nombreMes(n: number): string {
     return ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
-            'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][n] ?? '';
+            'Julio','Agosto','Septiembre','Octubre','Noviembre',
+            'Diciembre'][n] ?? '';
   }
 }

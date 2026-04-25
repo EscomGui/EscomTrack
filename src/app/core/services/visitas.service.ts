@@ -188,6 +188,33 @@ export class VisitasService {
     });
   }
 
+    async cambiarEstadoDirecto(
+    visitaId:             string,
+    estado:               EstadoVisita,
+    tecnicoNombre:        string,
+    esCompletadoDirecto:  boolean = false
+  ): Promise<void> {
+    const cambios: any = {
+      estado,
+      tecnicoNombre,
+      esCompletadoDirecto,
+      actualizadoEn: Timestamp.now(),
+    };
+
+    // Si regresa a pendiente — limpiar horarios y técnico
+    if (estado === 'pendiente') {
+      cambios.tecnicoNombre       = '';
+      cambios.tecnicoId           = '';
+      cambios.horaSalida          = null;
+      cambios.horaLlegada         = null;
+      cambios.horaInicio          = null;
+      cambios.horaTermino         = null;
+      cambios.esCompletadoDirecto = false;
+    }
+
+    await updateDoc(doc(this.fs, `visitas/${visitaId}`), cambios);
+  }
+
   async reabrirDocumentacion(
     visitaId: string,
     conservar: boolean = false
