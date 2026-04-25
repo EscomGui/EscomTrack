@@ -5,7 +5,9 @@ import {
   Timestamp, deleteDoc, getDocs, writeBatch
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Visita, EstadoVisita } from '../models/visita.model';
+
 
 @Injectable({ providedIn: 'root' })
 export class VisitasService {
@@ -26,7 +28,7 @@ export class VisitasService {
     const snap       = await getDocs(q);
     const existentes = new Set(snap.docs.map(d => d.id));
     const batch      = writeBatch(this.fs);
-    let   hayCambios = false;
+    let   hayCambios = false;;
 
     for (const s of sitios) {
       const id = `${tipo}_${anio}_${mes}_${s.id}`;
@@ -53,20 +55,22 @@ export class VisitasService {
     if (hayCambios) await batch.commit();
   }
 
-  getVisitasPorMes(
-    tipo: 'poliza' | 'cedis',
-    anio: number,
-    mes: number
-  ): Observable<Visita[]> {
-    const q = query(
-      collection(this.fs, 'visitas'),
-      where('tipo', '==', tipo),
-      where('anio', '==', anio),
-      where('mes',  '==', mes),
-      orderBy('sitioNombre'),
-    );
-    return collectionData(q, { idField: 'id' }) as Observable<Visita[]>;
-  }
+getVisitasPorMes(
+  tipo: 'poliza' | 'cedis',
+  anio: number,
+  mes: number
+): Observable<Visita[]> {
+  const q = query(
+    collection(this.fs, 'visitas'),
+    where('tipo', '==', tipo),
+    where('anio', '==', anio),
+    where('mes',  '==', mes),
+    orderBy('sitioNombre'),
+  );
+  return (collectionData(q, { idField: 'id' }) as Observable<Visita[]>).pipe(
+    map((vs: Visita[]) => vs.filter(v => !v.esBorrado))
+  );
+}
 
   // ── Cambios de estado ─────────────────────────────────────────────────────
   async marcarEnCamino(visitaId: string): Promise<void> {
@@ -243,9 +247,17 @@ export class VisitasService {
     });
   }
 
+// En lugar de deleteDoc, marca como borrado
   async eliminarVisita(visitaId: string): Promise<void> {
-    try { await deleteDoc(doc(this.fs, `visitas/${visitaId}`)); } catch {}
+    try {
+      await updateDoc(doc(this.fs, `visitas/${visitaId}`), {
+        esBorrado:     true,
+        actualizadoEn: Timestamp.now(),
+      });
+    } catch {}
   }
+
+  
 
   private async borrarDocumentacion(visitaId: string): Promise<void> {
     try { await deleteDoc(doc(this.fs, `documentacion/${visitaId}`)); } catch {}

@@ -1262,4 +1262,17 @@ body.theme-dark {
     border-color: #4a9eff !important;
     background: rgba(74,158,255,.1) !important;
   }
+
+  .cal-table td { 
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Para que técnico no se recorte
+.cal-table .col-tecnico {
+  min-width: 100px;
+  max-width: 150px;
+}
 }

@@ -20,7 +20,6 @@ import { AuthService } from '../../core/services/auth.service';
 import { Usuario } from '../../core/models/usuario.model';
 import { Visita, EstadoVisita } from '../../core/models/visita.model';
 
-
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -58,7 +57,6 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
       <!-- ── TAB USUARIOS ────────────────────────────────────────────── -->
       @if (tab() === 'usuarios') {
         <div class="tab-content">
-
           <div class="section-header">
             <h3>Usuarios registrados</h3>
             @if (auth.esAdmin) {
@@ -137,7 +135,8 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
 
           @if (cargandoUsuarios()) {
             <div class="estado-carga">
-              <span class="spinner"></span><span>Cargando usuarios...</span>
+              <span class="spinner"></span>
+              <span>Cargando usuarios...</span>
             </div>
           } @else {
             <table class="cal-table admin-table">
@@ -172,10 +171,11 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                       </span>
                     </td>
                     <td data-label="Acciones" style="text-align:right">
-                      <div style="display:flex;gap:6px;justify-content:flex-end;
-                                  flex-wrap:wrap">
+                      <div style="display:flex;gap:6px;
+                                  justify-content:flex-end;flex-wrap:wrap">
                         <button class="btn btn-sm"
-                                [class]="u.activo ? 'btn-secondary' : 'btn-success'"
+                                [class]="u.activo
+                                  ? 'btn-secondary' : 'btn-success'"
                                 (click)="toggleActivo(u)">
                           {{ u.activo ? 'Desactivar' : 'Activar' }}
                         </button>
@@ -194,14 +194,12 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
               </tbody>
             </table>
           }
-
         </div>
       }
 
       <!-- ── TAB VISITAS ─────────────────────────────────────────────── -->
       @if (tab() === 'visitas') {
         <div class="tab-content">
-
           <div class="section-header">
             <h3>Buscar y gestionar visitas</h3>
           </div>
@@ -257,7 +255,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                 <tbody>
                   @for (v of visitasBusqueda(); track v.id) {
                     <tr [class]="'row-' + rowClass(v.estado)">
-                      <td data-label="Sitio"   class="col-nombre">
+                      <td data-label="Sitio" class="col-nombre">
                         {{ v.sitioNombre }}
                       </td>
                       <td data-label="Técnico" class="text-muted"
@@ -269,7 +267,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                           {{ labelEstado(v.estado) }}
                         </span>
                       </td>
-                      <td data-label="Salida"  class="text-muted">
+                      <td data-label="Salida" class="text-muted">
                         {{ fmtHora(v.horaSalida) }}
                       </td>
                       <td data-label="Llegada" class="text-muted">
@@ -299,7 +297,8 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                               ↩ Pendiente
                             </button>
                           }
-                          @if (auth.esSuperAdmin && v.estado !== 'completo') {
+                          @if (auth.esSuperAdmin &&
+                               v.estado !== 'completo') {
                             <button class="btn btn-success btn-sm"
                                     (click)="marcarCompletoDirecto(v)">
                               ✅ Completar
@@ -323,14 +322,12 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
               <p>No se encontraron visitas con ese filtro.</p>
             </div>
           }
-
         </div>
       }
 
       <!-- ── TAB SITIOS ──────────────────────────────────────────────── -->
       @if (tab() === 'sitios') {
         <div class="tab-content">
-
           <div class="section-header">
             <h3>Agregar sitio al mes</h3>
           </div>
@@ -394,7 +391,6 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
               </button>
             </div>
           </div>
-
         </div>
       }
 
@@ -406,6 +402,7 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
             <h3>Mi perfil</h3>
           </div>
 
+          <!-- Info -->
           <div class="form-card">
             <div class="form-row">
               <div class="form-group">
@@ -422,26 +419,32 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
               Cambiar contraseña
             </div>
 
-<div class="form-row">
-  <div class="form-group">
-    <label>
-      Nueva contraseña
-      <span style="font-size:10px;color:var(--gris-med);font-weight:400">
-        (se aplica cuando el usuario inicie sesión)
-      </span>
-    </label>
-    <input type="password" [(ngModel)]="editPassword"
-           placeholder="Mínimo 6 caracteres" />
-  </div>
-  <div class="form-group">
-    <label>Rol</label>
-    <select [(ngModel)]="editRol">
-      <option value="tecnico">Técnico</option>
-      <option value="admin">Administrador</option>
-      <option value="superadmin">Super Administrador</option>
-    </select>
-  </div>
-</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nueva contraseña</label>
+                <div class="input-pwd">
+                  <input [type]="verPwd() ? 'text' : 'password'"
+                         [(ngModel)]="nuevaPwd"
+                         placeholder="Mínimo 6 caracteres" />
+                  <button type="button" class="pwd-toggle"
+                          (click)="verPwd.set(!verPwd())">
+                    {{ verPwd() ? '🙈' : '👁' }}
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Confirmar contraseña</label>
+                <div class="input-pwd">
+                  <input [type]="verPwd2() ? 'text' : 'password'"
+                         [(ngModel)]="confirmarPwd"
+                         placeholder="Repite la contraseña" />
+                  <button type="button" class="pwd-toggle"
+                          (click)="verPwd2.set(!verPwd2())">
+                    {{ verPwd2() ? '🙈' : '👁' }}
+                  </button>
+                </div>
+              </div>
+            </div>
 
             @if (errorPwd()) {
               <div class="banner banner-danger mb-3">
@@ -460,6 +463,34 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                       (click)="cambiarPassword()">
                 @if (cambiandoPwd()) { <span class="spinner"></span> }
                 Actualizar contraseña
+              </button>
+            </div>
+          </div>
+
+          <!-- Gestión de sesiones -->
+          <div class="section-header" style="margin-top:8px">
+            <h3>Gestión de sesiones</h3>
+          </div>
+
+          <div class="form-card">
+            <p style="margin-bottom:12px;color:var(--gris-med);font-size:13px">
+              Cierra la sesión de todos los técnicos y administradores activos.
+              Tu sesión como Super Admin no se verá afectada.
+              Los usuarios podrán volver a iniciar sesión normalmente.
+            </p>
+
+            @if (exitoCierre()) {
+              <div class="banner banner-lock mb-3">
+                <span>✓</span> {{ exitoCierre() }}
+              </div>
+            }
+
+            <div style="display:flex;justify-content:flex-end">
+              <button class="btn btn-danger"
+                      [disabled]="cerrandoSesiones()"
+                      (click)="cerrarSesionesTodos()">
+                @if (cerrandoSesiones()) { <span class="spinner"></span> }
+                🔒 Cerrar sesión a todos
               </button>
             </div>
           </div>
@@ -490,7 +521,9 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                   <div style="font-weight:600;color:var(--gris-osc)">
                     {{ usuarioAEliminar()!.nombre }}
                   </div>
-                  <div class="text-muted">{{ usuarioAEliminar()!.correo }}</div>
+                  <div class="text-muted">
+                    {{ usuarioAEliminar()!.correo }}
+                  </div>
                   <span class="badge"
                         [class]="badgeRol(usuarioAEliminar()!.rol)"
                         style="margin-top:4px">
@@ -539,17 +572,17 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                   <input type="email" [(ngModel)]="editCorreo" />
                 </div>
               </div>
-
               <div class="form-row">
                 <div class="form-group">
                   <label>
-                    Restablecer contraseña
-                    <span style="font-size:10px;color:var(--gris-med);font-weight:400">
-                      (escribe algo para enviar email de reset)
+                    Nueva contraseña
+                    <span style="font-size:10px;color:var(--gris-med);
+                                 font-weight:400">
+                      (se aplica cuando el usuario inicie sesión)
                     </span>
                   </label>
                   <input type="password" [(ngModel)]="editPassword"
-                        placeholder="Escribe algo para enviar email de restablecimiento" />
+                         placeholder="Mínimo 6 caracteres" />
                 </div>
                 <div class="form-group">
                   <label>Rol</label>
@@ -560,7 +593,6 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                   </select>
                 </div>
               </div>
-
               @if (errorEditar()) {
                 <div class="banner banner-danger">
                   <span>⚠</span> {{ errorEditar() }}
@@ -598,7 +630,8 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
                 Esta acción marca el sitio como completo sin
                 observaciones ni documentación.
               </div>
-              <p style="margin-bottom:8px;font-size:13px;color:var(--gris-osc)">
+              <p style="margin-bottom:8px;font-size:13px;
+                        color:var(--gris-osc)">
                 Sitio: <strong>{{ visitaCompletar()!.sitioNombre }}</strong>
               </p>
               <div class="form-group">
@@ -632,47 +665,47 @@ import { Visita, EstadoVisita } from '../../core/models/visita.model';
     <app-dialog />
   `,
   styles: [`
-    .admin-wrap    { max-width: 1100px; margin: 0 auto; padding: 80px 24px 32px; }
-    .admin-header  { margin-bottom: 28px; }
-    .admin-header h1 { margin-bottom: 4px; }
+    .admin-wrap    { max-width:1100px; margin:0 auto; padding:80px 24px 32px; }
+    .admin-header  { margin-bottom:28px; }
+    .admin-header h1 { margin-bottom:4px; }
     .section-header {
-      display: flex; align-items: center;
-      justify-content: space-between; margin-bottom: 16px;
+      display:flex; align-items:center;
+      justify-content:space-between; margin-bottom:16px;
     }
     .form-card {
-      background: #fff; border: 1px solid var(--gris-border);
-      border-radius: var(--radius-lg); padding: 20px;
-      margin-bottom: 20px; box-shadow: var(--shadow-xs);
+      background:#fff; border:1px solid var(--gris-border);
+      border-radius:var(--radius-lg); padding:20px;
+      margin-bottom:20px; box-shadow:var(--shadow-xs);
     }
     .filtros-row {
-      display: grid; grid-template-columns: 1fr 1fr 1fr auto;
-      gap: 12px; align-items: flex-end;
+      display:grid; grid-template-columns:1fr 1fr 1fr auto;
+      gap:12px; align-items:flex-end;
     }
     .estado-carga {
-      display: flex; justify-content: center; align-items: center;
-      gap: 12px; padding: 40px; color: var(--gris-med);
+      display:flex; justify-content:center; align-items:center;
+      gap:12px; padding:40px; color:var(--gris-med);
     }
     .estado-vacio {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 10px; padding: 40px; color: var(--gris-med); text-align: center;
+      display:flex; flex-direction:column; align-items:center;
+      gap:10px; padding:40px; color:var(--gris-med); text-align:center;
     }
-    .mb-3 { margin-bottom: 12px; }
-    .modal-confirm { max-width: 420px; }
+    .mb-3 { margin-bottom:12px; }
+    .modal-confirm { max-width:420px; }
     .confirm-user-card {
-      display: flex; align-items: center; gap: 14px;
-      padding: 14px; background: var(--rojo-bg);
-      border-radius: var(--radius-md); border: 1px solid var(--rojo-borde);
+      display:flex; align-items:center; gap:14px;
+      padding:14px; background:var(--rojo-bg);
+      border-radius:var(--radius-md); border:1px solid var(--rojo-borde);
     }
     .confirm-avatar {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: var(--rojo-osc); color: #fff;
-      font-size: 18px; font-weight: 600;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
+      width:44px; height:44px; border-radius:50%;
+      background:var(--rojo-osc); color:#fff;
+      font-size:18px; font-weight:600;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
     }
-    @media (max-width: 768px) {
-      .filtros-row { grid-template-columns: 1fr 1fr; }
-      .admin-wrap  { padding: 76px 12px 24px; }
+    @media (max-width:768px) {
+      .filtros-row { grid-template-columns:1fr 1fr; }
+      .admin-wrap  { padding:76px 12px 24px; }
     }
   `],
 })
@@ -685,7 +718,7 @@ export class AdminComponent implements OnInit {
   private dialog     = inject(DialogService);
   auth               = inject(AuthService);
 
-  tab = signal<'usuarios' | 'visitas' | 'sitios' | 'perfil'>('usuarios');
+  tab = signal<'usuarios'|'visitas'|'sitios'|'perfil'>('usuarios');
 
   // Usuarios
   usuarios          = signal<Usuario[]>([]);
@@ -703,7 +736,7 @@ export class AdminComponent implements OnInit {
   editNombre        = '';
   editCorreo        = '';
   editPassword      = '';
-  editRol: 'superadmin' | 'admin' | 'tecnico' = 'tecnico';
+  editRol: 'superadmin'|'admin'|'tecnico' = 'tecnico';
   errorEditar       = signal('');
   guardandoEditar   = signal(false);
 
@@ -711,7 +744,7 @@ export class AdminComponent implements OnInit {
   visitaCompletar   = signal<Visita | null>(null);
   tecnicoCompletar  = '';
   completando       = signal(false);
-  tecnicos          = signal<{ uid: string; nombre: string }[]>([]);
+  tecnicos          = signal<{ uid:string; nombre:string }[]>([]);
 
   // Visitas
   visitasBusqueda   = signal<Visita[]>([]);
@@ -732,14 +765,14 @@ export class AdminComponent implements OnInit {
   nuevoNombre   = '';
   nuevoCorreo   = '';
   nuevoPassword = '';
-  nuevoRol: 'superadmin' | 'admin' | 'tecnico' = 'tecnico';
+  nuevoRol: 'superadmin'|'admin'|'tecnico' = 'tecnico';
 
   // Filtros
   filtroTipo = 'poliza';
   filtroAnio = new Date().getFullYear();
   filtroMes  = new Date().getMonth() + 1;
 
-  // Perfil / cambio contraseña
+  // Perfil
   nuevaPwd     = '';
   confirmarPwd = '';
   verPwd       = signal(false);
@@ -747,6 +780,10 @@ export class AdminComponent implements OnInit {
   errorPwd     = signal('');
   exitoPwd     = signal('');
   cambiandoPwd = signal(false);
+
+  // Sesiones
+  cerrandoSesiones = signal(false);
+  exitoCierre      = signal('');
 
   meses = [
     { num:1,  nombre:'Enero' },     { num:2,  nombre:'Febrero' },
@@ -767,7 +804,7 @@ export class AdminComponent implements OnInit {
   private cargarUsuarios(): void {
     if (this.usuariosSub) this.usuariosSub.unsubscribe();
     const q = query(collection(this.fs, 'usuarios'));
-    this.usuariosSub = (collectionData(q, { idField: 'uid' }) as any)
+    this.usuariosSub = (collectionData(q, { idField:'uid' }) as any)
       .subscribe((us: Usuario[]) => {
         this.usuarios.set(us);
         this.cargandoUsuarios.set(false);
@@ -779,7 +816,7 @@ export class AdminComponent implements OnInit {
       collection(this.fs, 'usuarios'),
       where('activo', '==', true)
     );
-    (collectionData(q, { idField: 'uid' }) as any)
+    (collectionData(q, { idField:'uid' }) as any)
       .subscribe((us: any[]) => {
         this.tecnicos.set(
           us.map(u => ({ uid: u.uid, nombre: u.nombre }))
@@ -877,8 +914,6 @@ export class AdminComponent implements OnInit {
         actualizadoEn: Timestamp.now(),
       };
 
-      // Si escribió contraseña — guardarla en Firestore temporalmente
-      // Se aplicará automáticamente cuando el usuario inicie sesión
       if (this.editPassword && this.editPassword.length >= 6) {
         datos.nuevaPassword = this.editPassword;
       } else if (this.editPassword && this.editPassword.length > 0) {
@@ -891,11 +926,10 @@ export class AdminComponent implements OnInit {
 
       if (this.editPassword && this.editPassword.length >= 6) {
         await this.dialog.confirm({
-          tipo:  'success',
-          icono: '🔐',
+          tipo:  'success', icono: '🔐',
           titulo:  'Contraseña guardada',
-          mensaje: `La próxima vez que "${this.editNombre}" inicie sesión, su contraseña se actualizará automáticamente a la nueva.`,
-          detalle: `Comunícale al usuario su nueva contraseña personalmente.`,
+          mensaje: `La próxima vez que "${this.editNombre}" inicie sesión, su contraseña se actualizará automáticamente.`,
+          detalle: 'Comunícale al usuario su nueva contraseña personalmente.',
           btnOk:   'Entendido',
         });
       }
@@ -908,6 +942,7 @@ export class AdminComponent implements OnInit {
       this.guardandoEditar.set(false);
     }
   }
+
   eliminarUsuario(u: Usuario): void {
     if (!this.auth.esSuperAdmin) return;
     this.usuarioAEliminar.set(u);
@@ -934,11 +969,10 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  // ── Perfil — cambiar contraseña ───────────────────────────────────────────
+  // ── Perfil ────────────────────────────────────────────────────────────────
   async cambiarPassword(): Promise<void> {
     this.errorPwd.set('');
     this.exitoPwd.set('');
-
     if (!this.nuevaPwd) {
       this.errorPwd.set('Escribe la nueva contraseña.');
       return;
@@ -951,7 +985,6 @@ export class AdminComponent implements OnInit {
       this.errorPwd.set('Las contraseñas no coinciden.');
       return;
     }
-
     const ok = await this.dialog.confirm({
       tipo: 'warn', icono: '🔐',
       titulo:    'Cambiar contraseña',
@@ -960,7 +993,6 @@ export class AdminComponent implements OnInit {
       btnCancel: 'Cancelar',
     });
     if (!ok) return;
-
     this.cambiandoPwd.set(true);
     try {
       const user = this.fireAuth.currentUser;
@@ -979,6 +1011,44 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  // ── Cerrar sesión a todos ─────────────────────────────────────────────────
+  async cerrarSesionesTodos(): Promise<void> {
+    const ok = await this.dialog.confirm({
+      tipo:      'danger',
+      icono:     '🔒',
+      titulo:    'Cerrar sesión a todos',
+      mensaje:   '¿Confirmas cerrar la sesión de todos los usuarios activos?',
+      detalle:   'Tu sesión no se verá afectada. Los demás serán redirigidos al login.',
+      btnOk:     'Sí, cerrar todas',
+      btnCancel: 'Cancelar',
+    });
+    if (!ok) return;
+    this.cerrandoSesiones.set(true);
+    try {
+      await setDoc(doc(this.fs, 'config/sistema'), {
+        cerrarSesionTodos: true,
+        cerrarSesionAt:    Timestamp.now(),
+      });
+      // Después de 5 segundos resetea para que puedan volver a entrar
+      setTimeout(async () => {
+        await updateDoc(doc(this.fs, 'config/sistema'), {
+          cerrarSesionTodos: false,
+        });
+      }, 5000);
+      this.exitoCierre.set('✓ Sesiones cerradas. Los usuarios fueron redirigidos al login.');
+      setTimeout(() => this.exitoCierre.set(''), 5000);
+    } catch (e: any) {
+      await this.dialog.confirm({
+        tipo: 'danger', icono: '❌',
+        titulo:  'Error',
+        mensaje: e.message,
+        btnOk:   'Cerrar',
+      });
+    } finally {
+      this.cerrandoSesiones.set(false);
+    }
+  }
+
   // ── Visitas ───────────────────────────────────────────────────────────────
   async buscarVisitas(): Promise<void> {
     this.buscando.set(true);
@@ -990,7 +1060,7 @@ export class AdminComponent implements OnInit {
         where('anio', '==', +this.filtroAnio),
         where('mes',  '==', +this.filtroMes),
       );
-      (collectionData(q, { idField: 'id' }) as any)
+      (collectionData(q, { idField:'id' }) as any)
         .subscribe((vs: Visita[]) => {
           this.visitasBusqueda.set(vs);
           this.busquedaRealizada.set(true);
@@ -1069,7 +1139,7 @@ export class AdminComponent implements OnInit {
       this.visitaCompletar.set(null);
       this.visitasBusqueda.update(vs =>
         vs.map(x => x.id === v.id
-          ? { ...x, estado: 'completo' as EstadoVisita,
+          ? { ...x, estado:'completo' as EstadoVisita,
               tecnicoNombre: this.tecnicoCompletar,
               esCompletadoDirecto: true }
           : x
@@ -1101,7 +1171,7 @@ export class AdminComponent implements OnInit {
     this.visitasBusqueda.update(vs => vs.filter(x => x.id !== v.id));
   }
 
-  // ── Agregar sitio ─────────────────────────────────────────────────────────
+  // ── Sitios ────────────────────────────────────────────────────────────────
   async agregarSitio(): Promise<void> {
     this.errorSitio.set('');
     this.exitoSitio.set('');
@@ -1125,6 +1195,7 @@ export class AdminComponent implements OnInit {
         estado:        'pendiente',
         posicion:      +this.nuevoSitioPos,
         esExtra:       true,
+        esBorrado:     false,
         horaSalida:    null,
         horaLlegada:   null,
         horaTermino:   null,
@@ -1149,12 +1220,12 @@ export class AdminComponent implements OnInit {
     if (!t) return '—';
     const d = t?.toDate ? t.toDate() : new Date(t);
     return d.toLocaleTimeString('es-MX', {
-      hour: '2-digit', minute: '2-digit'
+      hour:'2-digit', minute:'2-digit'
     });
   }
 
   badgeRol(rol: string): string {
-    const m: Record<string, string> = {
+    const m: Record<string,string> = {
       superadmin: 'badge-en-camino',
       admin:      'badge-obs',
       tecnico:    'badge-pendiente',
@@ -1163,7 +1234,7 @@ export class AdminComponent implements OnInit {
   }
 
   labelRol(rol: string): string {
-    const m: Record<string, string> = {
+    const m: Record<string,string> = {
       superadmin: '⭐ Super Admin',
       admin:      'Admin',
       tecnico:    'Técnico',
@@ -1172,7 +1243,7 @@ export class AdminComponent implements OnInit {
   }
 
   rowClass(e: EstadoVisita): string {
-    const m: Record<EstadoVisita, string> = {
+    const m: Record<EstadoVisita,string> = {
       pendiente:'', en_camino:'en-camino', en_sitio:'en-sitio',
       en_proceso:'en-proceso', obs_guardadas:'obs', completo:'completo'
     };
@@ -1180,7 +1251,7 @@ export class AdminComponent implements OnInit {
   }
 
   badgeClass(e: EstadoVisita): string {
-    const m: Record<EstadoVisita, string> = {
+    const m: Record<EstadoVisita,string> = {
       pendiente:'badge-pendiente', en_camino:'badge-en-camino',
       en_sitio:'badge-en-sitio', en_proceso:'badge-en-proceso',
       obs_guardadas:'badge-obs', completo:'badge-completo'
@@ -1189,7 +1260,7 @@ export class AdminComponent implements OnInit {
   }
 
   labelEstado(e: EstadoVisita): string {
-    const m: Record<EstadoVisita, string> = {
+    const m: Record<EstadoVisita,string> = {
       pendiente:'Pendiente', en_camino:'En camino', en_sitio:'En sitio',
       en_proceso:'En proceso', obs_guardadas:'Obs. guardadas',
       completo:'Completo'

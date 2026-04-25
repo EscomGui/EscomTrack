@@ -178,9 +178,10 @@ import { SITIOS_CEDIS } from '../../../core/data/sitios-poliza.data';
                 <td class="col-nombre">{{ v.sitioNombre }}</td>
                 <td style="text-align:center">
 
-                <td class="text-muted" style="font-size:12px">
+                <td class="col-tecnico text-muted" style="font-size:12px">
                   {{ v.tecnicoNombre || '—' }}
                 </td>
+                
                 <td class="col-estado">
                   <span class="badge" [class]="badgeClass(v.estado)">
                     {{ labelEstado(v.estado) }}

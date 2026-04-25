@@ -21,6 +21,7 @@ export interface Visita {
   horaInicio?:          any;
   horaTermino?:         any;
   esCompletadoDirecto?: boolean;
+  esBorrado?:           boolean;
   creadoEn:             any;
   actualizadoEn:        any;
 }

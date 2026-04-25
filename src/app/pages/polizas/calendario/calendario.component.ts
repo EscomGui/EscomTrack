@@ -169,7 +169,7 @@ import { SITIOS_POLIZA, SitioBase } from '../../../core/data/sitios-poliza.data'
               <tr [class]="'row-' + rowClass(v.estado)">
                 <td class="col-num">{{ i + 1 }}</td>
                 <td class="col-nombre">{{ v.sitioNombre }}</td>
-                <td class="text-muted" style="font-size:12px">
+                <td class="col-tecnico text-muted" style="font-size:12px">
                   {{ v.tecnicoNombre || '—' }}
                 </td>
                 <td class="col-estado">
