@@ -15,7 +15,7 @@ import { ReportesService } from '../../../core/services/reportes.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { DialogService } from '../../../core/services/dialog.service';
 import { Visita, EstadoVisita } from '../../../core/models/visita.model';
-import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data';
+import { SITIOS_CEDIS } from '../../../core/data/sitios-poliza.data';
 
 @Component({
   selector: 'app-calendario-cedis',
@@ -36,7 +36,7 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
           <div>
             <h2>{{ nombreMes(mes()) }} {{ anio() }}</h2>
             <p class="text-muted">
-              CEDIS · Ciclo {{ cicloLabel() }} · {{ visitas().length }} sitios
+              CEDIS · Ciclo Oct 2025 — Sep 2026 · {{ visitas().length }} sitios
             </p>
           </div>
           <button class="btn btn-secondary btn-sm" (click)="navMes(1)">›</button>
@@ -165,7 +165,7 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
                   </div>
                 </div>
               </th>
-              <th style="width:70px;text-align:center">Visitas</th>
+
               <th>Técnico</th>
               <th class="col-estado">Estado</th>
               <th class="col-acc">Acciones</th>
@@ -177,10 +177,7 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
                 <td class="col-num">{{ i + 1 }}</td>
                 <td class="col-nombre">{{ v.sitioNombre }}</td>
                 <td style="text-align:center">
-                  <span class="text-muted">
-                    {{ frecuencia(v.sitioId) }}×
-                  </span>
-                </td>
+
                 <td class="text-muted" style="font-size:12px">
                   {{ v.tecnicoNombre || '—' }}
                 </td>
@@ -225,9 +222,7 @@ import { SITIOS_CEDIS, SitioCedis } from '../../../core/data/sitios-poliza.data'
                  [class]="'row-' + rowClass(v.estado)">
               <div class="sitio-card-top">
                 <div>
-                  <div class="sitio-card-num">
-                    # {{ i+1 }} · {{ frecuencia(v.sitioId) }}× año
-                  </div>
+                  <div class="sitio-card-num"># {{ i + 1 }}</div>
                   <div class="sitio-card-nombre">{{ v.sitioNombre }}</div>
                   <div class="text-muted"
                        style="font-size:11px;margin-top:2px">
@@ -846,39 +841,33 @@ export class CalendarioCedisComponent implements OnInit, OnDestroy {
     );
   }
 
-  async cargarVisitas(): Promise<void> {
-    this.subVisitas?.unsubscribe();
-    this.cargando.set(true);
-    const sitiosMes = SITIOS_CEDIS.filter(
-      (s: SitioCedis) => s.meses.includes(this.mes())
+async cargarVisitas(): Promise<void> {
+  this.subVisitas?.unsubscribe();
+  this.cargando.set(true);
+
+  // Filtra sitios exactos para este anio+mes
+  const sitiosMes = SITIOS_CEDIS.filter(
+    s => s.anio === this.anio() && s.mes === this.mes()
+  );
+
+  if (sitiosMes.length > 0) {
+    await this.visitasSvc.crearVisitasMes(
+      sitiosMes.map(s => ({ id: s.id, nombre: s.nombre })),
+      'cedis', this.anio(), this.mes()
     );
-    if (sitiosMes.length > 0) {
-      await this.visitasSvc.crearVisitasMes(
-        sitiosMes.map((s: SitioCedis) => ({ id: s.id, nombre: s.nombre })),
-        'cedis', this.anio(), this.mes()
-      );
-    }
-    this.subVisitas = this.visitasSvc
-      .getVisitasPorMes('cedis', this.anio(), this.mes())
-      .subscribe(vs => {
-        this.visitas.set(vs);
-        this.cargando.set(false);
-        if (this.visitaDetalle()) {
-          const act = vs.find(v => v.id === this.visitaDetalle()!.id);
-          if (act) this.visitaDetalle.set(act);
-        }
-      });
   }
 
-  cicloLabel(): string {
-    return `Oct ${this.anio() - 1} — Sep ${this.anio()}`;
-  }
-
-  frecuencia(sitioId: string): number {
-    return SITIOS_CEDIS.find(
-      (s: SitioCedis) => s.id === sitioId
-    )?.frecuencia ?? 0;
-  }
+  this.subVisitas = this.visitasSvc
+    .getVisitasPorMes('cedis', this.anio(), this.mes())
+    .subscribe(vs => {
+      this.visitas.set(vs);
+      this.cargando.set(false);
+      if (this.visitaDetalle()) {
+        const act = vs.find(v => v.id === this.visitaDetalle()!.id);
+        if (act) this.visitaDetalle.set(act);
+      }
+    });
+}
 
   navMes(d: number): void {
     const ciclo = [10,11,12,1,2,3,4,5,6,7,8,9];

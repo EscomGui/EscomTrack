@@ -5,7 +5,6 @@ export interface Sitio {
     nombre: string;
     tipo: TipoSitio;
     grupo?: number;
-    frecuenciaVisitas?: number;
     activo: boolean;
     creadoEn?: Date;
 }

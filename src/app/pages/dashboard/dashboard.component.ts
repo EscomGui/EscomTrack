@@ -142,17 +142,30 @@ export class DashboardComponent {
   ];
 
   mesesCedis = [
-    { num:10, nombre:'Octubre' },  { num:11, nombre:'Noviembre' },
-    { num:12, nombre:'Diciembre' },{ num:1,  nombre:'Enero' },
-    { num:2,  nombre:'Febrero' },  { num:3,  nombre:'Marzo' },
-    { num:4,  nombre:'Abril' },    { num:5,  nombre:'Mayo' },
-    { num:6,  nombre:'Junio' },    { num:7,  nombre:'Julio' },
-    { num:8,  nombre:'Agosto' },   { num:9,  nombre:'Septiembre' },
+    { num:10, nombre:'Octubre'    },
+    { num:11, nombre:'Noviembre'  },
+    { num:12, nombre:'Diciembre'  },
+    { num:1,  nombre:'Enero'      },
+    { num:2,  nombre:'Febrero'    },
+    { num:3,  nombre:'Marzo'      },
+    { num:4,  nombre:'Abril'      },
+    { num:5,  nombre:'Mayo'       },
+    { num:6,  nombre:'Junio'      },
+    { num:7,  nombre:'Julio'      },
+    { num:8,  nombre:'Agosto'     },
+    { num:9,  nombre:'Septiembre' },
   ];
 
   cambiarAnio(d: number): void { this.anio.update(a => a + d); }
 
+// En el método ir() para CEDIS
   ir(tipo: 'polizas' | 'cedis', mes: number): void {
-    this.router.navigate(['/' + tipo, this.anio(), mes]);
+    if (tipo === 'polizas') {
+      this.router.navigate(['/polizas', this.anio(), mes]);
+    } else {
+      // CEDIS — el año depende del mes
+      const anio = mes >= 10 ? 2025 : 2026;
+      this.router.navigate(['/cedis', anio, mes]);
+    }
   }
 }

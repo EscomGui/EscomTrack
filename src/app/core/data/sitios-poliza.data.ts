@@ -5,10 +5,10 @@ export interface SitioBase {
 }
 
 export interface SitioCedis {
-  id: string;
+  id:     string;
   nombre: string;
-  frecuencia: number;
-  meses: number[];
+  anio:   number; // año real del mes (2025 o 2026)
+  mes:    number;
 }
 
 // ── Pólizas ───────────────────────────────────────────────────────────────
@@ -134,81 +134,174 @@ export const SITIOS_POLIZA: SitioBase[] = [
   { id:'p112', nombre:'Rocío Báscula (Chiapas)',        grupo:4 },
 ];
 
-// ── CEDIS ─────────────────────────────────────────────────────────────────
+// ── CEDIS — Ciclo Oct 2025 / Sep 2026 ─────────────────────────────────────
+// Cada sitio tiene anio+mes exacto del docx
 export const SITIOS_CEDIS: SitioCedis[] = [
 
-  // Paso del Toro — Oct, Ene, May, Ago
-  { id:'c1',  nombre:'P Paso del Toro Producción Site Central',        frecuencia:4, meses:[10,1,5,8] },
-  { id:'c2',  nombre:'P Paso del Toro Producción Báscula Patio',       frecuencia:4, meses:[10,1,5,8] },
-  { id:'c3',  nombre:'P Paso del Toro Producción Sala de Juntas',      frecuencia:4, meses:[10,1,5,8] },
-  { id:'c4',  nombre:'P Paso del Toro Premezclas Dosificación',        frecuencia:4, meses:[10,1,5,8] },
-  { id:'c5',  nombre:'P Paso del Toro Premezclas Báscula Ferrocarril', frecuencia:4, meses:[10,1,5,8] },
-  { id:'c6',  nombre:'P Paso del Toro Premezclas Planta Premezclas',   frecuencia:4, meses:[10,1,5,8] },
+  // ── OCTUBRE 2025 ──────────────────────────────────────────────────────────
+  { id:'c1',  anio:2025, mes:10, nombre:'P Paso del Toro Producción Site Central'        },
+  { id:'c2',  anio:2025, mes:10, nombre:'P Paso del Toro Producción Báscula Patio'       },
+  { id:'c3',  anio:2025, mes:10, nombre:'P Paso del Toro Producción Sala de Juntas'      },
+  { id:'c4',  anio:2025, mes:10, nombre:'P Paso del Toro Premezclas Dosificación'        },
+  { id:'c5',  anio:2025, mes:10, nombre:'P Paso del Toro Premezclas Báscula Ferrocarril' },
+  { id:'c6',  anio:2025, mes:10, nombre:'P Paso del Toro Premezclas Planta Premezclas'   },
+  { id:'c7',  anio:2025, mes:10, nombre:'Planta Chiapa de Corzo Site'                    },
+  { id:'c8',  anio:2025, mes:10, nombre:'Planta Chiapa de Corzo Oficinas'                },
+  { id:'c9',  anio:2025, mes:10, nombre:'Tuxtla Gutiérrez Chiapas Almacén'               },
+  { id:'c10', anio:2025, mes:10, nombre:'Tuxtla Gutiérrez Chiapas Oficina'               },
 
-  // Chiapa de Corzo — Oct, Feb, May, Sep
-  { id:'c7',  nombre:'Planta Chiapa de Corzo Site',                    frecuencia:4, meses:[10,2,5,9] },
-  { id:'c8',  nombre:'Planta Chiapa de Corzo Oficinas',                frecuencia:4, meses:[10,2,5,9] },
+  // ── NOVIEMBRE 2025 ────────────────────────────────────────────────────────
+  // Planta Córdoba Oficinas marcada como "Desaparecer" — NO se incluye
+  { id:'c11', anio:2025, mes:11, nombre:'Planta Córdoba Dosificación'                    },
+  { id:'c12', anio:2025, mes:11, nombre:'Planta Córdoba Materia Prima'                   },
+  { id:'c13', anio:2025, mes:11, nombre:'Tecas Cuarto Máquinas'                          },
+  { id:'c14', anio:2025, mes:11, nombre:'Tecas Caseta Vigilancia'                        },
+  { id:'c15', anio:2025, mes:11, nombre:'Tecas Oficina Principal'                        },
+  { id:'c16', anio:2025, mes:11, nombre:'Transportes Mantenimiento'                      },
+  { id:'c17', anio:2025, mes:11, nombre:'PPA M5000'                                      },
+  { id:'c18', anio:2025, mes:11, nombre:'PPA M5000 Embarque'                             },
+  { id:'c19', anio:2025, mes:11, nombre:'PPA Fábrica de Harina'                          },
+  { id:'c20', anio:2025, mes:11, nombre:'PPA AVA'                                        },
+  { id:'c21', anio:2025, mes:11, nombre:'PPA Caseta de Vigilancia Camiones'              },
+  { id:'c22', anio:2025, mes:11, nombre:'PPA Caseta de Vigilancia Principal'             },
+  { id:'c23', anio:2025, mes:11, nombre:'PPA Ventas'                                     },
+  { id:'c24', anio:2025, mes:11, nombre:'PPA Compras'                                    },
 
-  // Tuxtla Gutiérrez — Oct, Feb, May, Sep
-  { id:'c9',  nombre:'Tuxtla Gutiérrez Chiapas Almacén',               frecuencia:4, meses:[10,2,5,9] },
-  { id:'c10', nombre:'Tuxtla Gutiérrez Chiapas Oficina',               frecuencia:4, meses:[10,2,5,9] },
+  // ── DICIEMBRE 2025 ────────────────────────────────────────────────────────
+  { id:'c25', anio:2025, mes:12, nombre:'Cedis Veracruz Oficinas'                        },
+  { id:'c26', anio:2025, mes:12, nombre:'Cedis Veracruz Producción'                      },
+  { id:'c27', anio:2025, mes:12, nombre:'Cedis Apizaco Planta Alta'                      },
+  { id:'c28', anio:2025, mes:12, nombre:'Cedis Apizaco Planta Baja'                      },
+  { id:'c29', anio:2025, mes:12, nombre:'Puebla'                                         },
+  { id:'c30', anio:2025, mes:12, nombre:'Oficinas Corporativas Sala de Formación'        },
+  { id:'c31', anio:2025, mes:12, nombre:'Oficinas Corporativas Seguridad Patrimonial'    },
+  { id:'c32', anio:2025, mes:12, nombre:'Oficinas Corporativas Centro de Monitoreo'      },
+  { id:'c33', anio:2025, mes:12, nombre:'Oficinas Corporativas Talento Humano Avícola'   },
+  { id:'c34', anio:2025, mes:12, nombre:'Oficinas Corporativas Operativo'                },
+  { id:'c35', anio:2025, mes:12, nombre:'Oficinas Corporativas Proyectos'                },
+  { id:'c36', anio:2025, mes:12, nombre:'Oficinas Corporativas Pollo Vivo'               },
+  { id:'c37', anio:2025, mes:12, nombre:'Oficinas Corporativas Talento Humano (Ingenios)'},
+  { id:'c38', anio:2025, mes:12, nombre:'Oficinas Corporativas Marketing'                },
+  { id:'c39', anio:2025, mes:12, nombre:'Oficinas Corporativas TI'                       },
 
-  // Córdoba — Nov, Feb, Jun, Sep
-  { id:'c11', nombre:'Planta Córdoba Dosificación',                    frecuencia:4, meses:[11,2,6,9] },
-  { id:'c12', nombre:'Planta Córdoba Materia Prima',                   frecuencia:4, meses:[11,2,6,9] },
-  { id:'c13', nombre:'Planta Córdoba Báscula Camionera',               frecuencia:1, meses:[2]        },
+  // ── ENERO 2026 ────────────────────────────────────────────────────────────
+  { id:'c40', anio:2026, mes:1, nombre:'Cedis México Oficinas'                           },
+  // Cedis Huatulco: "No hay fecha" — se incluye para que el admin lo vea
+  { id:'c41', anio:2026, mes:1, nombre:'Cedis Huatulco Oficinas (Sin fecha)'             },
+  { id:'c42', anio:2026, mes:1, nombre:'P Paso del Toro Producción Site Central'         },
+  { id:'c43', anio:2026, mes:1, nombre:'P Paso del Toro Producción Báscula Patio'        },
+  { id:'c44', anio:2026, mes:1, nombre:'P Paso del Toro Producción Sala de Juntas'       },
+  { id:'c45', anio:2026, mes:1, nombre:'P Paso del Toro Premezclas Dosificación'         },
+  { id:'c46', anio:2026, mes:1, nombre:'P Paso del Toro Premezclas Báscula Ferrocarril'  },
+  { id:'c47', anio:2026, mes:1, nombre:'P Paso del Toro Premezclas Planta Premezclas'    },
 
-  // Planta Córdoba Oficinas — solo Jun (no Nov, no aparece en Feb)
-  { id:'c14', nombre:'Planta Córdoba Oficinas',                        frecuencia:1, meses:[6]        },
+  // ── FEBRERO 2026 ──────────────────────────────────────────────────────────
+  // Planta Córdoba Oficinas marcada como "Desaparecer" — NO se incluye
+  { id:'c48', anio:2026, mes:2, nombre:'Planta Chiapa de Corzo Site'                     },
+  { id:'c49', anio:2026, mes:2, nombre:'Planta Chiapa de Corzo Oficinas'                 },
+  { id:'c50', anio:2026, mes:2, nombre:'Tuxtla Gutiérrez Chiapas Almacén'                },
+  { id:'c51', anio:2026, mes:2, nombre:'Tuxtla Gutiérrez Chiapas Oficina'                },
+  { id:'c52', anio:2026, mes:2, nombre:'Planta Córdoba Dosificación'                     },
+  { id:'c53', anio:2026, mes:2, nombre:'Planta Córdoba Materia Prima'                    },
+  { id:'c54', anio:2026, mes:2, nombre:'Planta Córdoba Báscula Camionera'                },
+  { id:'c55', anio:2026, mes:2, nombre:'Tecas Cuarto Máquinas'                           },
+  { id:'c56', anio:2026, mes:2, nombre:'Tecas Caseta Vigilancia'                         },
+  { id:'c57', anio:2026, mes:2, nombre:'Tecas Oficina Principal'                         },
 
-  // Tecas — Nov, Feb, Jun, Sep
-  { id:'c15', nombre:'Tecas Cuarto Máquinas',                          frecuencia:4, meses:[11,2,6,9] },
-  { id:'c16', nombre:'Tecas Caseta Vigilancia',                        frecuencia:4, meses:[11,2,6,9] },
-  { id:'c17', nombre:'Tecas Oficina Principal',                        frecuencia:4, meses:[11,2,6,9] },
+  // ── MARZO 2026 ────────────────────────────────────────────────────────────
+  { id:'c58', anio:2026, mes:3, nombre:'Cedis Veracruz Oficinas'                         },
+  { id:'c59', anio:2026, mes:3, nombre:'Cedis Veracruz Producción'                       },
+  { id:'c60', anio:2026, mes:3, nombre:'Transportes Mantenimiento'                       },
+  { id:'c61', anio:2026, mes:3, nombre:'PPA M5000'                                       },
+  { id:'c62', anio:2026, mes:3, nombre:'PPA M5000 Embarque'                              },
+  { id:'c63', anio:2026, mes:3, nombre:'PPA Fábrica de Harina'                           },
+  { id:'c64', anio:2026, mes:3, nombre:'PPA AVA'                                         },
+  { id:'c65', anio:2026, mes:3, nombre:'PPA Caseta de Vigilancia Camiones'               },
+  { id:'c66', anio:2026, mes:3, nombre:'PPA Caseta de Vigilancia Principal'              },
+  { id:'c67', anio:2026, mes:3, nombre:'PPA Ventas'                                      },
+  { id:'c68', anio:2026, mes:3, nombre:'PPA Compras'                                     },
 
-  // Transportes — Nov, Mar, Jun
-  { id:'c18', nombre:'Transportes Mantenimiento',                      frecuencia:3, meses:[11,3,6]   },
+  // ── ABRIL 2026 ────────────────────────────────────────────────────────────
+  { id:'c69', anio:2026, mes:4, nombre:'Cedis Apizaco Planta Alta'                       },
+  { id:'c70', anio:2026, mes:4, nombre:'Cedis Apizaco Planta Baja'                       },
+  { id:'c71', anio:2026, mes:4, nombre:'Puebla'                                          },
+  { id:'c72', anio:2026, mes:4, nombre:'Cedis México Oficinas'                           },
+  { id:'c73', anio:2026, mes:4, nombre:'Cedis Huatulco Oficinas'                         },
+  { id:'c74', anio:2026, mes:4, nombre:'Oficinas Corporativas Sala de Formación'         },
+  { id:'c75', anio:2026, mes:4, nombre:'Oficinas Corporativas Seguridad Patrimonial'     },
+  { id:'c76', anio:2026, mes:4, nombre:'Oficinas Corporativas Centro de Monitoreo'       },
+  { id:'c77', anio:2026, mes:4, nombre:'Oficinas Corporativas Talento Humano Avícola'    },
+  { id:'c78', anio:2026, mes:4, nombre:'Oficinas Corporativas Operativo'                 },
+  { id:'c79', anio:2026, mes:4, nombre:'Oficinas Corporativas Proyectos'                 },
+  { id:'c80', anio:2026, mes:4, nombre:'Oficinas Corporativas Pollo Vivo'                },
+  { id:'c81', anio:2026, mes:4, nombre:'Oficinas Corporativas Talento Humano (Ingenios)' },
+  { id:'c82', anio:2026, mes:4, nombre:'Oficinas Corporativas Marketing'                 },
+  { id:'c83', anio:2026, mes:4, nombre:'Oficinas Corporativas TI'                        },
 
-  // PPA — Nov, Mar, Jun
-  { id:'c19', nombre:'PPA M5000',                                      frecuencia:3, meses:[11,3,6]   },
-  { id:'c20', nombre:'PPA M5000 Embarque',                             frecuencia:3, meses:[11,3,6]   },
-  { id:'c21', nombre:'PPA Fábrica de Harina',                          frecuencia:3, meses:[11,3,6]   },
-  { id:'c22', nombre:'PPA AVA',                                        frecuencia:3, meses:[11,3,6]   },
-  { id:'c23', nombre:'PPA Caseta de Vigilancia Camiones',              frecuencia:3, meses:[11,3,6]   },
-  { id:'c24', nombre:'PPA Caseta de Vigilancia Principal',             frecuencia:3, meses:[11,3,6]   },
-  { id:'c25', nombre:'PPA Ventas',                                     frecuencia:3, meses:[11,3,6]   },
-  { id:'c26', nombre:'PPA Compras',                                    frecuencia:3, meses:[11,3,6]   },
+  // ── MAYO 2026 ─────────────────────────────────────────────────────────────
+  { id:'c84', anio:2026, mes:5, nombre:'P Paso del Toro Producción Site Central'         },
+  { id:'c85', anio:2026, mes:5, nombre:'P Paso del Toro Producción Báscula Patio'        },
+  { id:'c86', anio:2026, mes:5, nombre:'P Paso del Toro Producción Sala de Juntas'       },
+  { id:'c87', anio:2026, mes:5, nombre:'P Paso del Toro Premezclas Dosificación'         },
+  { id:'c88', anio:2026, mes:5, nombre:'P Paso del Toro Premezclas Báscula Ferrocarril'  },
+  { id:'c89', anio:2026, mes:5, nombre:'P Paso del Toro Premezclas Planta Premezclas'    },
+  { id:'c90', anio:2026, mes:5, nombre:'Planta Chiapa de Corzo Site'                     },
+  { id:'c91', anio:2026, mes:5, nombre:'Planta Chiapa de Corzo Oficinas'                 },
+  { id:'c92', anio:2026, mes:5, nombre:'Tuxtla Gutiérrez Chiapas Almacén'                },
+  { id:'c93', anio:2026, mes:5, nombre:'Tuxtla Gutiérrez Chiapas Oficina'                },
 
-  // Cedis Veracruz — Dic, Mar, Jul
-  { id:'c27', nombre:'Cedis Veracruz Oficinas',                        frecuencia:3, meses:[12,3,7]   },
-  { id:'c28', nombre:'Cedis Veracruz Producción',                      frecuencia:3, meses:[12,3,7]   },
+  // ── JUNIO 2026 ────────────────────────────────────────────────────────────
+  { id:'c94',  anio:2026, mes:6, nombre:'Planta Córdoba Oficinas'                        },
+  { id:'c95',  anio:2026, mes:6, nombre:'Planta Córdoba Dosificación'                    },
+  { id:'c96',  anio:2026, mes:6, nombre:'Planta Córdoba Materia Prima'                   },
+  { id:'c97',  anio:2026, mes:6, nombre:'Tecas Cuarto Máquinas'                          },
+  { id:'c98',  anio:2026, mes:6, nombre:'Tecas Caseta Vigilancia'                        },
+  { id:'c99',  anio:2026, mes:6, nombre:'Tecas Oficina Principal'                        },
+  { id:'c100', anio:2026, mes:6, nombre:'Transportes Mantenimiento'                      },
+  { id:'c101', anio:2026, mes:6, nombre:'PPA M5000'                                      },
+  { id:'c102', anio:2026, mes:6, nombre:'PPA M5000 Embarque'                             },
+  { id:'c103', anio:2026, mes:6, nombre:'PPA Fábrica de Harina'                          },
+  { id:'c104', anio:2026, mes:6, nombre:'PPA AVA'                                        },
+  { id:'c105', anio:2026, mes:6, nombre:'PPA Caseta de Vigilancia Camiones'              },
+  { id:'c106', anio:2026, mes:6, nombre:'PPA Caseta de Vigilancia Principal'             },
+  { id:'c107', anio:2026, mes:6, nombre:'PPA Ventas'                                     },
+  { id:'c108', anio:2026, mes:6, nombre:'PPA Compras'                                    },
 
-  // Cedis Apizaco — Dic, Abr, Jul
-  { id:'c29', nombre:'Cedis Apizaco Planta Alta',                      frecuencia:3, meses:[12,4,7]   },
-  { id:'c30', nombre:'Cedis Apizaco Planta Baja',                      frecuencia:3, meses:[12,4,7]   },
+  // ── JULIO 2026 ────────────────────────────────────────────────────────────
+  { id:'c109', anio:2026, mes:7, nombre:'Cedis Veracruz Oficinas'                        },
+  { id:'c110', anio:2026, mes:7, nombre:'Cedis Veracruz Producción'                      },
+  { id:'c111', anio:2026, mes:7, nombre:'Cedis Apizaco Planta Alta'                      },
+  { id:'c112', anio:2026, mes:7, nombre:'Cedis Apizaco Planta Baja'                      },
+  { id:'c113', anio:2026, mes:7, nombre:'Puebla'                                         },
+  { id:'c114', anio:2026, mes:7, nombre:'Oficinas Corporativas Sala de Formación'        },
+  { id:'c115', anio:2026, mes:7, nombre:'Oficinas Corporativas Seguridad Patrimonial'    },
+  { id:'c116', anio:2026, mes:7, nombre:'Oficinas Corporativas Centro de Monitoreo'      },
+  { id:'c117', anio:2026, mes:7, nombre:'Oficinas Corporativas Talento Humano Avícola'   },
+  { id:'c118', anio:2026, mes:7, nombre:'Oficinas Corporativas Operativo'                },
+  { id:'c119', anio:2026, mes:7, nombre:'Oficinas Corporativas Proyectos'                },
+  { id:'c120', anio:2026, mes:7, nombre:'Oficinas Corporativas Pollo Vivo'               },
+  { id:'c121', anio:2026, mes:7, nombre:'Oficinas Corporativas Talento Humano (Ingenios)'},
+  { id:'c122', anio:2026, mes:7, nombre:'Oficinas Corporativas Marketing'                },
+  { id:'c123', anio:2026, mes:7, nombre:'Oficinas Corporativas TI'                       },
 
-  // Puebla — Dic, Abr, Jul
-  { id:'c31', nombre:'Puebla',                                         frecuencia:3, meses:[12,4,7]   },
+  // ── AGOSTO 2026 ───────────────────────────────────────────────────────────
+  { id:'c124', anio:2026, mes:8, nombre:'Cedis México Oficinas'                          },
+  { id:'c125', anio:2026, mes:8, nombre:'P Paso del Toro Producción Site Central'        },
+  { id:'c126', anio:2026, mes:8, nombre:'P Paso del Toro Producción Báscula Patio'       },
+  { id:'c127', anio:2026, mes:8, nombre:'P Paso del Toro Producción Sala de Juntas'      },
+  { id:'c128', anio:2026, mes:8, nombre:'P Paso del Toro Premezclas Dosificación'        },
+  { id:'c129', anio:2026, mes:8, nombre:'P Paso del Toro Premezclas Báscula Ferrocarril' },
+  { id:'c130', anio:2026, mes:8, nombre:'P Paso del Toro Premezclas Planta Premezclas'   },
 
-  // Oficinas Corporativas — Dic, Abr, Jul
-  { id:'c32', nombre:'Oficinas Corporativas Sala de Formación',        frecuencia:3, meses:[12,4,7]   },
-  { id:'c33', nombre:'Oficinas Corporativas Seguridad Patrimonial',    frecuencia:3, meses:[12,4,7]   },
-  { id:'c34', nombre:'Oficinas Corporativas Centro de Monitoreo',      frecuencia:3, meses:[12,4,7]   },
-  { id:'c35', nombre:'Oficinas Corporativas Talento Humano Avícola',   frecuencia:3, meses:[12,4,7]   },
-  { id:'c36', nombre:'Oficinas Corporativas Operativo',                frecuencia:3, meses:[12,4,7]   },
-  { id:'c37', nombre:'Oficinas Corporativas Proyectos',                frecuencia:3, meses:[12,4,7]   },
-  { id:'c38', nombre:'Oficinas Corporativas Pollo Vivo',               frecuencia:3, meses:[12,4,7]   },
-  { id:'c39', nombre:'Oficinas Corporativas Talento Humano (Ingenios)',frecuencia:3, meses:[12,4,7]   },
-  { id:'c40', nombre:'Oficinas Corporativas Marketing',                frecuencia:3, meses:[12,4,7]   },
-  { id:'c41', nombre:'Oficinas Corporativas TI',                       frecuencia:3, meses:[12,4,7]   },
-
-  // Cedis México — Ene, Abr, Ago
-  { id:'c42', nombre:'Cedis México Oficinas',                          frecuencia:3, meses:[1,4,8]    },
-
-  // Cedis Huatulco — Ene, Abr
-  { id:'c43', nombre:'Cedis Huatulco Oficinas',                        frecuencia:2, meses:[1,4]      },
-
-  // Tuxtla sep extra
-  { id:'c44', nombre:'Planta Tuxtla Gutiérrez Oficinas',               frecuencia:1, meses:[9]        },
-  { id:'c45', nombre:'Planta Tuxtla Gutiérrez Almacén',                frecuencia:1, meses:[9]        },
+  // ── SEPTIEMBRE 2026 ───────────────────────────────────────────────────────
+  { id:'c131', anio:2026, mes:9, nombre:'Planta Chiapa de Corzo Site'                    },
+  { id:'c132', anio:2026, mes:9, nombre:'Planta Chiapa de Corzo Oficinas'                },
+  { id:'c133', anio:2026, mes:9, nombre:'Planta Tuxtla Gutiérrez Oficinas'               },
+  { id:'c134', anio:2026, mes:9, nombre:'Planta Tuxtla Gutiérrez Almacén'                },
+  { id:'c135', anio:2026, mes:9, nombre:'Planta Córdoba Oficinas'                        },
+  { id:'c136', anio:2026, mes:9, nombre:'Planta Córdoba Dosificación'                    },
+  { id:'c137', anio:2026, mes:9, nombre:'Planta Córdoba Materia Prima'                   },
+  { id:'c138', anio:2026, mes:9, nombre:'Tecas Cuarto Máquinas'                          },
+  { id:'c139', anio:2026, mes:9, nombre:'Tecas Caseta Vigilancia'                        },
+  { id:'c140', anio:2026, mes:9, nombre:'Tecas Oficina Principal'                        },
 ];
